@@ -1,0 +1,14 @@
+#!/usr/bin/env ruby
+require 'rubydeps'
+
+require 'spec'
+
+p = ::Spec::Runner::OptionParser.new($stderr, $stdout)
+p.parse(Dir["./spec/**/*_spec.rb"])
+op = p.options
+
+Rubydeps.for(Regexp.new(ARGV.first || `pwd`.chomp)) do
+  ::Spec::Runner::CommandLine.run(op)
+end
+
+
