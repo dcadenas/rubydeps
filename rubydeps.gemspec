@@ -46,17 +46,20 @@ Gem::Specification.new do |s|
       s.add_development_dependency(%q<filetesthelper>, ["~> 1.0.0"])
       s.add_dependency(%q<ruby-graphviz>, ["~> 0.9.17"])
       s.add_dependency(%q<rcov>, ["~> 0.9.8"])
+      s.add_dependency(%q<thor>, ["~> 0.14.2"])
     else
       s.add_dependency(%q<rspec>, [">= 1.2.9"])
       s.add_dependency(%q<filetesthelper>, ["~> 1.0.0"])
       s.add_dependency(%q<ruby-graphviz>, ["~> 0.9.17"])
       s.add_dependency(%q<rcov>, ["~> 0.9.8"])
+      s.add_dependency(%q<thor>, ["~> 0.14.2"])
     end
   else
     s.add_dependency(%q<rspec>, [">= 1.2.9"])
     s.add_dependency(%q<filetesthelper>, ["~> 1.0.0"])
     s.add_dependency(%q<ruby-graphviz>, ["~> 0.9.17"])
     s.add_dependency(%q<rcov>, ["~> 0.9.8"])
+    s.add_dependency(%q<thor>, ["~> 0.14.2"])
   end
 end
 

@@ -1,14 +1,40 @@
 #!/usr/bin/env ruby
 require 'rubydeps'
+require 'thor'
 
-require 'spec'
+module Rubydeps
+  class Runner < Thor
+    desc "rspec", "Create the dependency graph after runnning the rspec tests"
+    #TODO: this breaks when using underscores, investigate
+    method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
+    def rspec
+      require 'spec'
 
-p = ::Spec::Runner::OptionParser.new($stderr, $stdout)
-p.parse(Dir["./spec/**/*_spec.rb"])
-op = p.options
+      p = ::Spec::Runner::OptionParser.new($stderr, $stdout)
+      p.parse(Dir["./spec/**/*_spec.rb"])
+      op = p.options
 
-Rubydeps.dot_for(Regexp.new(ARGV.first || `pwd`.chomp)) do
-  ::Spec::Runner::CommandLine.run(op)
+      ARGV.clear
+      Rubydeps.dot_for(Regexp.new(options[:path_filter])) do
+        ::Spec::Runner::CommandLine.run(op)
+      end
+    end
+
+    desc "rspec2", "Create the dependency graph after runnning the rspec 2 tests"
+    method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
+    def rspec2
+      require 'rspec'
+
+      op = ::RSpec::Core::ConfigurationOptions.new(Dir["./spec/**/*_spec.rb"])
+      op.parse_options
+
+      ARGV.clear
+      Rubydeps.dot_for(Regexp.new(options[:path_filter])) do
+        ::RSpec::Core::CommandLine.new(op).run($stderr, $stdout)
+      end
+    end
+  end
 end
 
+Rubydeps::Runner.start(ARGV)
 
