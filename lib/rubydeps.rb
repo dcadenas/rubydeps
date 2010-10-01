@@ -1,63 +1,76 @@
+require 'rcov'
 require 'graphviz'
 
 module Rubydeps
-  def self.for(file_filter = /.*/, result_processor = graphviz_result_processor, &block_to_analyze)
-    start(file_filter)
-    block_to_analyze.call
-    result_processor.call(result)
-  ensure
-    stop
-  end
+  def self.dot_for(file_filter = /.*/, &block_to_analyze)
+    dependencies_hash = hash_for(file_filter, &block_to_analyze)
 
-  def self.graphviz_result_processor
-    lambda {|result|
-      if result
-        g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
-        result.each do |k,vs|
-          unless k.nil?
-            n1 = g.add_node(k.to_s)
-            if vs.respond_to?(:each)
-              vs.keys.each do |v|
+    if dependencies_hash
+      g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
+      dependencies_hash.each do |k,vs|
+        if !k.empty? && !vs.empty?
+          n1 = g.add_node(k.to_s)
+          if vs.respond_to?(:each)
+            vs.each do |v|
+              unless v.empty?
                 n2 = g.add_node(v.to_s)
-                g.add_edge(n1, n2)
+                g.add_edge(n2, n1)
               end
             end
           end
         end
-
-        g.output( :png => "rubydeps.png" )
       end
-    }
+
+      g.output( :dot => "rubydeps.dot" )
+    end
   end
 
-  def self.start(file_filter)
-    Thread.current[:class_stack] = []
-    Thread.current[:deps] = {}
+  def self.hash_for(file_filter = /.*/, &block_to_analyze)
+    analyzer = Rcov::CallSiteAnalyzer.new
+    analyzer.run_hooked do
+      block_to_analyze.call
+    end
 
-    set_trace_func proc { |event, file, line, id, binding, classname|
-      if (event == 'call' || event == 'return') && file_filter =~ file
-        calling_class = Thread.current[:class_stack].last
-        if classname.to_s != calling_class
-          dependencies_of_calling_class = Thread.current[:deps][calling_class] ||= {}
-          dependencies_of_calling_class[classname.to_s] ||= 0
-          dependencies_of_calling_class[classname.to_s] += 1
+    dependencies_hash = {}
+    analyzer.analyzed_classes.each do |c|
+      called_class_name = normalize_class_name(c)
+        dependencies_hash[called_class_name] = {}
+        analyzer.methods_for_class(c).each do |m|
+          calling_method = "#{c}##{m}"
+          if file_filter =~ analyzer.defsite(calling_method).file
+            analyzer.callsites(calling_method).each do |key, value|
+              calling_class = key.calling_class
+              calling_class_name = normalize_class_name(calling_class.to_s)
 
-          Thread.current[:class_stack].push(classname.to_s) if event == 'call'
+              dependencies_hash[called_class_name][calling_class_name] ||= 0
+              dependencies_hash[called_class_name][calling_class_name] += value
+            end
         end
-
-        Thread.current[:class_stack].pop if event == 'return'
       end
-    }
+    end
+
+    clean_hash(dependencies_hash)
   end
 
-  def self.result
-    Thread.current[:deps].clone if Thread.current[:deps]
+private
+  def self.clean_hash(hash)
+    cleaned_hash = {}
+    hash.each do |called_class_name, calling_class_names_hash|
+      if interesting_class_name(called_class_name) && !hash[called_class_name].empty?
+        cleaned_hash[called_class_name] = calling_class_names_hash.keys.compact.select{|c| interesting_class_name(c) && c != called_class_name}
+        cleaned_hash.delete(called_class_name) if cleaned_hash[called_class_name].empty?
+      end
+    end
+
+    cleaned_hash
   end
 
-  def self.stop
-    set_trace_func(nil)
-    Thread.current[:deps].clear if Thread.current[:deps]
-    Thread.current[:class_stack].clear if Thread.current[:class_stack]
+  def self.normalize_class_name(klass)
+    klass.gsub(/#<Class:(.+)>/, '\1')
+  end
+
+  def self.interesting_class_name(class_name)
+    !class_name.empty? && class_name != "Rcov::CallSiteAnalyzer" && class_name != "Rcov::DifferentialAnalyzer"
   end
 end
 

@@ -1,4 +1,5 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
+require 'filetesthelper'
 
 class Grandparent
   def self.class_method
@@ -36,48 +37,51 @@ class Son
 end
 
 describe "Rubydeps" do
+  include FileTestHelper
   it "should show the class level dependencies" do
-    dependencies = Rubydeps.for(/.*/, lambda{|result| result}) do
+    dependencies = Rubydeps.hash_for do
       class IHaveAClassLevelDependency
         Son.class_method
       end
     end
 
-    dependencies.should == {
-      nil=>{"Son"=>3, "Rubydeps"=>3},
-      "Son"=>{"Parent"=>2}
-    }
+    dependencies.should == {"Parent"=>["Son"]}
+  end
+
+  it "should create a dot file" do
+    with_files do
+      dependencies = Rubydeps.dot_for do
+        class IHaveAClassLevelDependency
+          Son.class_method
+        end
+      end
+
+      File.read("rubydeps.dot").should match("digraph G")
+    end
   end
 
   it "should be idempotent" do
-    Rubydeps.for(/.*/, lambda{|result| result}) do
+    Rubydeps.hash_for do
       class IHaveAClassLevelDependency
         Son.class_method
       end
     end
 
-    dependencies = Rubydeps.for(/.*/, lambda{|result| result}) do
+    dependencies = Rubydeps.hash_for do
       class IHaveAClassLevelDependency
         Son.class_method
       end
     end
 
-    dependencies.should == {
-      nil=>{"Son"=>3, "Rubydeps"=>3},
-      "Son"=>{"Parent"=>2}
-    }
+    dependencies.should == {"Parent"=>["Son"]}
   end
 
   it "should show the dependencies between the classes inside the block" do
-    dependencies = Rubydeps.for(/.*/, lambda{|result| result}) do
+    dependencies = Rubydeps.hash_for do
       Son.class_method
       Son.new.instance_method
     end
 
-    dependencies.should == {
-      nil=>{"Son"=>4, "Rubydeps"=>3},
-      "Son"=>{"Grandparent"=>1, "Parent"=>3},
-      "Parent"=>{"Grandparent"=>1}
-    }
+    dependencies.should == {"Parent"=>["Son"], "Grandparent"=>["Parent", "Son"]}
   end
 end
