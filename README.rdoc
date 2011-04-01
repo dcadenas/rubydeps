@@ -1,9 +1,31 @@
 = rubydeps
 
-Description goes here.
+A tool to create class dependency graphs from test suites
+
+== Usage
+
+Rubydeps will run your test suite to record the call graph of your project and use it to create a dot graph.
+
+First of all, be sure to step into the root directory of your project, rubydeps searches for ./spec or ./test dirs from there, and then do:
+
+  rubydeps testunit --path-filter='activemodel/lib' # to run Test::Unit tests
+or
+  rubydeps rspec --path-filter='activemodel/lib' # to run RSpec tests
+or
+  rubydeps rspec2 --path-filter='activemodel/lib' # to run RSpec 2 tests
+
+This will output a rubydeps.dot. You can convert it to any image format you like with the dot utility e.g.:
+
+  dot -Tsvg rubydeps.dot > rubydeps.svg && open rubydeps.svg
+
+== Dependencies
+
+* rcov
+* graphviz
+* ruby-graphviz
 
 == Note on Patches/Pull Requests
- 
+
 * Fork the project.
 * Make your feature addition or bug fix.
 * Add tests for it. This is important so I don't break it in a
