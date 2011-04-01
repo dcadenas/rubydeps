@@ -1,6 +1,7 @@
-require 'rcov'
 require 'graphviz'
 require 'set'
+require 'rcovrt'
+require 'rcov'
 
 module Rubydeps
   def self.dot_for(path_filter = /.*/, &block_to_analyze)
@@ -42,7 +43,9 @@ module Rubydeps
         dependencies_hash[called_class_name] = {}
         analyzer.methods_for_class(c).each do |m|
           called_class_method = "#{c}##{m}"
-          if path_filter =~ File.expand_path(analyzer.defsite(called_class_method).file)
+
+          def_site = analyzer.defsite(called_class_method)
+          if def_site && path_filter =~ File.expand_path(def_site.file)
             filtered_classes << called_class_name
             analyzer.callsites(called_class_method).each do |key, _|
               calling_class = key.calling_class

@@ -1,5 +1,5 @@
-require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
-require 'filetesthelper'
+#require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
+require 'file_test_helper'
 
 class Grandparent
   def self.class_method

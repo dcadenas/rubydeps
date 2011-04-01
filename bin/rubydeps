@@ -4,6 +4,19 @@ require 'thor'
 
 module Rubydeps
   class Runner < Thor
+    desc "testunit", "Create the dependency graph after runnning the testunit tests"
+    method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
+    def testunit
+      require 'test/unit'
+
+      Dir["./test/**/*_test.rb"].each { |f| load f unless f =~ /^-/  }
+
+      ARGV.clear
+      Rubydeps.dot_for(Regexp.new(options[:path_filter])) do
+        ::Test::Unit::AutoRunner.run
+      end
+    end
+
     desc "rspec", "Create the dependency graph after runnning the rspec tests"
     #TODO: this breaks when using underscores, investigate
     method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
