@@ -34,8 +34,7 @@ module Rubydeps
     end
 
     dependency_hash = create_dependency_hash(analyzer, path_filter)
-    path_filtered_classes = (dependency_hash.keys + dependency_hash.values).flatten.compact.uniq
-    clean_hash(dependency_hash, path_filtered_classes)
+    clean_hash(dependency_hash)
   end
 
 private
@@ -43,7 +42,7 @@ private
     code_site && path_filter =~ File.expand_path(code_site.file)
   end
 
-  #we build a hash structued in this way: {"called_class_name1" => ["calling_class_name1", "calling_class_name2"], "called_class_name2" => ...}
+  #we build a hash structured in this way: {"called_class_name1" => ["calling_class_name1", "calling_class_name2"], "called_class_name2" => ...}
   def self.create_dependency_hash(analyzer, path_filter)
     dependency_hash = {}
     analyzer.analyzed_classes.each do |c|
@@ -68,11 +67,11 @@ private
     dependency_hash
   end
 
-  def self.clean_hash(dependency_hash, path_filtered_classes)
+  def self.clean_hash(dependency_hash)
     cleaned_hash = {}
     dependency_hash.each do |called_class_name, calling_class_names|
-      if interesting_class_name(called_class_name) && !dependency_hash[called_class_name].empty? && path_filtered_classes.member?(called_class_name)
-        cleaned_hash[called_class_name] = calling_class_names.select{|c| interesting_class_name(c) && c != called_class_name && path_filtered_classes.member?(c) }
+      if interesting_class_name(called_class_name) && !dependency_hash[called_class_name].empty?
+        cleaned_hash[called_class_name] = calling_class_names.select{|c| interesting_class_name(c) && c != called_class_name }
         cleaned_hash.delete(called_class_name) if cleaned_hash[called_class_name].empty?
       end
     end
