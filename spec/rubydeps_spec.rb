@@ -82,6 +82,8 @@ describe "Rubydeps" do
       Son.new.instance_method
     end
 
-    dependencies.should == {"Parent"=>["Son"], "Grandparent"=>["Parent", "Son"]}
+    dependencies.keys.should =~ ["Parent", "Grandparent"]
+    dependencies["Parent"].should == ["Son"]
+    dependencies["Grandparent"].should =~ ["Son", "Parent"]
   end
 end

@@ -37,3 +37,4 @@ This will output a rubydeps.dot. You can convert it to any image format you like
 == Copyright
 
 Copyright (c) 2010 Daniel Cadenas. See LICENSE for details.
+Development sponsored by {Cubox}[www.cuboxsa.com]

@@ -33,40 +33,46 @@ module Rubydeps
       block_to_analyze.call
     end
 
-    #TODO: refactor this, needs method extractions, etc
+    dependency_hash = create_dependency_hash(analyzer, path_filter)
+    path_filtered_classes = (dependency_hash.keys + dependency_hash.values).flatten.compact.uniq
+    clean_hash(dependency_hash, path_filtered_classes)
+  end
 
-    filtered_classes = Set.new
+private
+  def self.path_filtered_site?(code_site, path_filter)
+    code_site && path_filter =~ File.expand_path(code_site.file)
+  end
 
-    dependencies_hash = {}
+  #we build a hash structued in this way: {"called_class_name1" => ["calling_class_name1", "calling_class_name2"], "called_class_name2" => ...}
+  def self.create_dependency_hash(analyzer, path_filter)
+    dependency_hash = {}
     analyzer.analyzed_classes.each do |c|
       called_class_name = normalize_class_name(c)
-        dependencies_hash[called_class_name] = {}
-        analyzer.methods_for_class(c).each do |m|
-          called_class_method = "#{c}##{m}"
-
-          def_site = analyzer.defsite(called_class_method)
-          if def_site && path_filter =~ File.expand_path(def_site.file)
-            filtered_classes << called_class_name
-            analyzer.callsites(called_class_method).each do |key, _|
-              calling_class = key.calling_class
+      analyzer.methods_for_class(c).each do |m|
+        called_class_method = "#{c}##{m}"
+        def_site = analyzer.defsite(called_class_method)
+        if path_filtered_site?(def_site, path_filter)
+          calling_class_names = []
+          analyzer.callsites(called_class_method).each do |call_site, _|
+            if path_filtered_site?(call_site, path_filter)
+              calling_class = call_site.calling_class
               calling_class_name = normalize_class_name(calling_class.to_s)
-
-              dependencies_hash[called_class_name][calling_class_name] ||= 1
+              calling_class_names << calling_class_name
             end
+          end
+          dependency_hash[called_class_name] = calling_class_names.compact.uniq
         end
       end
     end
 
-    clean_hash(dependencies_hash, filtered_classes)
+    dependency_hash
   end
 
-private
-  def self.clean_hash(hash, filtered_classes)
-    #TODO: refactor
+  def self.clean_hash(dependency_hash, path_filtered_classes)
     cleaned_hash = {}
-    hash.each do |called_class_name, calling_class_names_hash|
-      if interesting_class_name(called_class_name) && !hash[called_class_name].empty? && filtered_classes.member?(called_class_name)
-        cleaned_hash[called_class_name] = calling_class_names_hash.keys.compact.select{|c| interesting_class_name(c) && c != called_class_name && filtered_classes.member?(c) }
+    dependency_hash.each do |called_class_name, calling_class_names|
+      if interesting_class_name(called_class_name) && !dependency_hash[called_class_name].empty? && path_filtered_classes.member?(called_class_name)
+        cleaned_hash[called_class_name] = calling_class_names.select{|c| interesting_class_name(c) && c != called_class_name && path_filtered_classes.member?(c) }
         cleaned_hash.delete(called_class_name) if cleaned_hash[called_class_name].empty?
       end
     end
@@ -74,14 +80,12 @@ private
     cleaned_hash
   end
 
+  def self.interesting_class_name(class_name)
+    !class_name.empty? && class_name != "Rcov::CallSiteAnalyzer" && class_name != "Rcov::DifferentialAnalyzer"
+  end
+
   def self.normalize_class_name(klass)
     good_class_name = klass.gsub(/#<Class:(.+)>/, '\1')
     good_class_name.gsub(/\([^\)]*\)/, "")
   end
-
-  def self.interesting_class_name(class_name)
-    !class_name.empty? && class_name != "Rcov::CallSiteAnalyzer" && class_name != "Rcov::DifferentialAnalyzer"
-  end
 end
-
-
