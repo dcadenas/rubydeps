@@ -9,7 +9,7 @@ module Rubydeps
     def testunit
       require 'test/unit'
 
-      Dir["./test/**/*_test.rb"].each { |f| load f unless f =~ /^-/  }
+      (Dir["./test/**/*_test.rb"] + Dir["./test/**/test_*.rb"]).each { |f| load f unless f =~ /^-/  }
 
       ARGV.clear
       Rubydeps.dot_for(Regexp.new(options[:path_filter])) do
