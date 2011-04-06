@@ -33,7 +33,7 @@ Just require rubydeps and pass a block to analyze to the dot_for method.
 
 This is the result of running rubydeps on top of the Rails activemodel tests:
 
-![activemodel dependency graph](http://github.com/dcadenas/rubydeps/raw/master/activemodel_deps.svg)
+<object data="http://github.com/dcadenas/rubydeps/raw/master/activemodel_deps.svg" width="800" height="320" type="image/svg+xml" />
 
 == Dependencies
 
