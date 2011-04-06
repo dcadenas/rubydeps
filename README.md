@@ -1,47 +1,56 @@
-= rubydeps
+rubydeps
+========
 
 A tool to create class dependency graphs from test suites
 
-== Command line usage
+Command line usage
+------------------
+
 
 Rubydeps will run your test suite to record the call graph of your project and use it to create a dot graph.
 
 First of all, be sure to step into the root directory of your project, rubydeps searches for ./spec or ./test dirs from there.
 For example, if we want to graph the Rails activemodel dependency graph we'd cd to rails/activemodel and from there we'd write:
 
-  rubydeps testunit --path-filter='activemodel/lib' # to run Test::Unit tests
+    rubydeps testunit --path-filter='activemodel/lib' # to run Test::Unit tests
 or
-  rubydeps rspec --path-filter='activemodel/lib' # to run RSpec tests
+    rubydeps rspec --path-filter='activemodel/lib' # to run RSpec tests
 or
-  rubydeps rspec2 --path-filter='activemodel/lib' # to run RSpec 2 tests
+    rubydeps rspec2 --path-filter='activemodel/lib' # to run RSpec 2 tests
 
 This will output a rubydeps.dot. The --path-filter option specifies a regexp that matches the path of the files you are interested in analyzing. For example you could have filters like 'project_name/app|project_name/lib' to analyze only code that is located in the 'app' and 'lib' dirs or as an alternative you could just exclude some directory you are not interested using a negative regexp like 'project_name(?!.*test)'
 You can convert the dot file to any image format you like using the dot utility that comes with the graphviz installation e.g.:
 
-  dot -Tsvg rubydeps.dot > rubydeps.svg
+    dot -Tsvg rubydeps.dot > rubydeps.svg
 
 
-== Library usage
+Library usage
+-------------
 
 Just require rubydeps and pass a block to analyze to the dot_for method.
 
-  Rubydeps.dot_for(path_filter_regexp) do
-    //your code goes here
-  end
+    Rubydeps.dot_for(path_filter_regexp) do
+      //your code goes here
+    end
 
-== Example output
+Example output
+--------------
 
-This is the result of running rubydeps on top of the Rails activemodel tests:
+This is the result of running rubydeps on the [Mechanize](http://github.com/tenderlove/mechanize) tests:
 
-<object data="http://github.com/dcadenas/rubydeps/raw/master/activemodel_deps.svg" width="800" height="320" type="image/svg+xml" />
+![Mechanize dependencies](https://github.com/dcadenas/rubydeps/raw/master/mechanize-deps.png)
 
-== Dependencies
+Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so it's a quick bird's eye view to check your project coverage.
+
+Dependencies
+------------
 
 * rcov
 * graphviz
 * ruby-graphviz
 
-== Note on Patches/Pull Requests
+Note on Patches/Pull Requests
+-----------------------------
 
 * Fork the project.
 * Make your feature addition or bug fix.
@@ -51,7 +60,9 @@ This is the result of running rubydeps on top of the Rails activemodel tests:
   (if you want to have your own version, that is fine but bump version in a commit by itself I can ignore when I pull)
 * Send me a pull request. Bonus points for topic branches.
 
-== Copyright
+Copyright
+---------
 
 Copyright (c) 2010 Daniel Cadenas. See LICENSE for details.
-Development sponsored by {Cubox}[www.cuboxsa.com]
+
+Development sponsored by [Cubox](www.cuboxsa.com)
