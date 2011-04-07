@@ -43,6 +43,7 @@ private
   end
 
   #we build a hash structured in this way: {"called_class_name1" => ["calling_class_name1", "calling_class_name2"], "called_class_name2" => ...}
+  #TODO: want moar love here
   def self.create_dependency_hash(analyzer, path_filter)
     dependency_hash = {}
     analyzer.analyzed_classes.each do |c|
