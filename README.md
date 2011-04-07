@@ -29,18 +29,25 @@ Library usage
 
 Just require rubydeps and pass a block to analyze to the dot_for method.
 
+    require 'rubydeps'
+
     Rubydeps.dot_for(path_filter_regexp) do
       //your code goes here
     end
 
-Example output
---------------
+Sample output
+-------------
 
 This is the result of running rubydeps on the [Mechanize](http://github.com/tenderlove/mechanize) tests:
 
 ![Mechanize dependencies](https://github.com/dcadenas/rubydeps/raw/master/mechanize-deps.png)
 
 Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so it's a quick bird's eye view to check your project coverage.
+
+Installation
+------------
+
+    gem install rubydeps
 
 Dependencies
 ------------
@@ -65,4 +72,4 @@ Copyright
 
 Copyright (c) 2010 Daniel Cadenas. See LICENSE for details.
 
-Development sponsored by [Cubox](www.cuboxsa.com)
+Development sponsored by [Cubox](http://www.cuboxsa.com)
