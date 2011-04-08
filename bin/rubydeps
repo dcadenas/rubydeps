@@ -12,8 +12,7 @@ module Rubydeps
 
       (Dir["./test/**/*_test.rb"] + Dir["./test/**/test_*.rb"]).each { |f| load f unless f =~ /^-/  }
 
-      ARGV.clear
-      Rubydeps.dot_for(:path_filter => Regexp.new(options[:path_filter], :class_name_filter => options[:class_name_filter])) do
+      create_dependencies_dot_for(options) do
         ::Test::Unit::AutoRunner.run
       end
     end
@@ -29,8 +28,7 @@ module Rubydeps
       p.parse(Dir["./spec/**/*_spec.rb"])
       op = p.options
 
-      ARGV.clear
-      Rubydeps.dot_for(:path_filter => Regexp.new(options[:path_filter], :class_name_filter => options[:class_name_filter])) do
+      create_dependencies_dot_for(options) do
         ::Spec::Runner::CommandLine.run(op)
       end
     end
@@ -44,9 +42,17 @@ module Rubydeps
       op = ::RSpec::Core::ConfigurationOptions.new(Dir["./spec/**/*_spec.rb"])
       op.parse_options
 
+      create_dependencies_dot_for(options) do
+        ::RSpec::Core::CommandLine.new(op).run($stderr, $stdout)
+      end
+    end
+
+    private 
+
+    def create_dependencies_dot_for(options)
       ARGV.clear
       Rubydeps.dot_for(:path_filter => Regexp.new(options[:path_filter], :class_name_filter => options[:class_name_filter])) do
-        ::RSpec::Core::CommandLine.new(op).run($stderr, $stdout)
+        yield
       end
     end
   end
