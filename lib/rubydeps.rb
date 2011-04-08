@@ -4,8 +4,8 @@ require 'rcovrt'
 require 'rcov'
 
 module Rubydeps
-  def self.dot_for(path_filter = /.*/, &block_to_analyze)
-    dependencies_hash = hash_for(path_filter, &block_to_analyze)
+  def self.dot_for(options = {}, &block_to_analyze)
+    dependencies_hash = hash_for(options, &block_to_analyze)
 
     if dependencies_hash
       g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
@@ -27,14 +27,17 @@ module Rubydeps
     end
   end
 
-  def self.hash_for(path_filter = /.*/, &block_to_analyze)
+  def self.hash_for(options = {}, &block_to_analyze)
     analyzer = Rcov::CallSiteAnalyzer.new
     analyzer.run_hooked do
       block_to_analyze.call
     end
 
+    path_filter = options.fetch(:path_filter, /.*/)
+    class_name_filter = options.fetch(:class_name_filter, /.*/)
+
     dependency_hash = create_dependency_hash(analyzer, path_filter)
-    clean_hash(dependency_hash)
+    clean_hash(dependency_hash, class_name_filter)
   end
 
 private
@@ -69,11 +72,15 @@ private
     dependency_hash
   end
 
-  def self.clean_hash(dependency_hash)
+  def self.clean_hash(dependency_hash, class_name_filter)
     cleaned_hash = {}
     dependency_hash.each do |called_class_name, calling_class_names|
-      if interesting_class_name(called_class_name) && !dependency_hash[called_class_name].empty?
-        cleaned_hash[called_class_name] = (calling_class_names - [nil]).select{|c| interesting_class_name(c) && c != called_class_name }
+      if interesting_class_name(called_class_name) && !dependency_hash[called_class_name].empty? && called_class_name =~ class_name_filter
+        cleaned_hash[called_class_name] = (calling_class_names - [nil]).select do |c|
+          interesting_class_name(c) &&
+          c != called_class_name &&
+          c =~ class_name_filter
+        end
         cleaned_hash.delete(called_class_name) if cleaned_hash[called_class_name].empty?
       end
     end
