@@ -12,17 +12,21 @@ Rubydeps will run your test suite to record the call graph of your project and u
 First of all, be sure to step into the root directory of your project, rubydeps searches for ./spec or ./test dirs from there.
 For example, if we want to graph the Rails activemodel dependency graph we'd cd to rails/activemodel and from there we'd write:
 
-    rubydeps testunit --path-filter='activemodel/lib' # to run Test::Unit tests
+    rubydeps testunit #to run Test::Unit tests
 or
-    rubydeps rspec --path-filter='activemodel/lib' # to run RSpec tests
+    rubydeps rspec #to run RSpec tests
 or
-    rubydeps rspec2 --path-filter='activemodel/lib' # to run RSpec 2 tests
+    rubydeps rspec2 #to run RSpec 2 tests
 
-This will output a rubydeps.dot. The --path-filter option specifies a regexp that matches the path of the files you are interested in analyzing. For example you could have filters like 'project_name/app|project_name/lib' to analyze only code that is located in the 'app' and 'lib' dirs or as an alternative you could just exclude some directory you are not interested using a negative regexp like 'project_name(?!.*test)'
-You can convert the dot file to any image format you like using the dot utility that comes with the graphviz installation e.g.:
+This will output a rubydeps.dot. You can convert the dot file to any image format you like using the dot utility that comes with the graphviz installation e.g.:
 
     dot -Tsvg rubydeps.dot > rubydeps.svg
 
+### Command line options
+
+The --path-filter option specifies a regexp that matches the path of the files you are interested in analyzing. For example you could have filters like 'project_name/app|project_name/lib' to analyze only code that is located in the 'app' and 'lib' dirs or as an alternative you could just exclude some directory you are not interested using a negative regexp like 'project_name(?!.*test)'
+
+The --class_name_filter option is similar to the --path_filter options except that the regexp is matched against the class names (i.e. graph node names).
 
 Library usage
 -------------
@@ -31,7 +35,7 @@ Just require rubydeps and pass a block to analyze to the dot_for method.
 
     require 'rubydeps'
 
-    Rubydeps.dot_for(path_filter_regexp) do
+    Rubydeps.dot_for(:path_filter => path_filter_regexp, :class_name_filter) do
       //your code goes here
     end
 
