@@ -52,7 +52,7 @@ private
         called_class_method = "#{c}##{m}"
         def_site = analyzer.defsite(called_class_method)
         if path_filtered_site?(def_site, path_filter)
-          calling_class_names = []
+          calling_class_names = Set.new
           analyzer.callsites(called_class_method).each do |call_site, _|
             if path_filtered_site?(call_site, path_filter)
               calling_class = call_site.calling_class
@@ -60,7 +60,7 @@ private
               calling_class_names << calling_class_name
             end
           end
-          dependency_hash[called_class_name] ||= []
+          dependency_hash[called_class_name] ||= Set.new
           dependency_hash[called_class_name] += calling_class_names
         end
       end
@@ -73,7 +73,7 @@ private
     cleaned_hash = {}
     dependency_hash.each do |called_class_name, calling_class_names|
       if interesting_class_name(called_class_name) && !dependency_hash[called_class_name].empty?
-        cleaned_hash[called_class_name] = calling_class_names.compact.uniq.select{|c| interesting_class_name(c) && c != called_class_name }
+        cleaned_hash[called_class_name] = (calling_class_names - [nil]).select{|c| interesting_class_name(c) && c != called_class_name }
         cleaned_hash.delete(called_class_name) if cleaned_hash[called_class_name].empty?
       end
     end
