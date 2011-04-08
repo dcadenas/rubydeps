@@ -3,6 +3,16 @@ rubydeps
 
 A tool to create class dependency graphs from test suites
 
+Sample output
+-------------
+
+This is the result of running rubydeps on the [Mechanize](http://github.com/tenderlove/mechanize) tests:
+
+    rubydeps testunit --path-filter='mechanize/lib'
+
+![Mechanize dependencies](https://github.com/dcadenas/rubydeps/raw/master/mechanize-deps.png)
+
+
 Command line usage
 ------------------
 
@@ -22,6 +32,8 @@ This will output a rubydeps.dot. You can convert the dot file to any image forma
 
     dot -Tsvg rubydeps.dot > rubydeps.svg
 
+Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so it's a quick bird's eye view to check your project coverage.
+
 ### Command line options
 
 The --path-filter option specifies a regexp that matches the path of the files you are interested in analyzing. For example you could have filters like 'project_name/app|project_name/lib' to analyze only code that is located in the 'app' and 'lib' dirs or as an alternative you could just exclude some directory you are not interested using a negative regexp like 'project_name(?!.*test)'
@@ -35,18 +47,9 @@ Just require rubydeps and pass a block to analyze to the dot_for method.
 
     require 'rubydeps'
 
-    Rubydeps.dot_for(:path_filter => path_filter_regexp, :class_name_filter) do
+    Rubydeps.dot_for(:path_filter => path_filter_regexp, :class_name_filter => class_name_filter_regexp) do
       //your code goes here
     end
-
-Sample output
--------------
-
-This is the result of running rubydeps on the [Mechanize](http://github.com/tenderlove/mechanize) tests:
-
-![Mechanize dependencies](https://github.com/dcadenas/rubydeps/raw/master/mechanize-deps.png)
-
-Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so it's a quick bird's eye view to check your project coverage.
 
 Installation
 ------------
