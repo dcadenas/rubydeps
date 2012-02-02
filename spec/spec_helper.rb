@@ -2,5 +2,5 @@ require 'rubydeps'
 require 'rspec'
 require 'rspec/autorun'
 
-Rspec.configure do |config|
+RSpec.configure do |config|
 end

@@ -47,7 +47,7 @@ Just require rubydeps and pass a block to analyze to the dot_for method.
 
     require 'rubydeps'
 
-    Rubydeps.dot_for(:path_filter => path_filter_regexp, :class_name_filter => class_name_filter_regexp) do
+    Rubydeps.create_dot_for(:path_filter => path_filter_regexp, :class_name_filter => class_name_filter_regexp) do
       //your code goes here
     end
 
@@ -56,10 +56,16 @@ Installation
 
     gem install rubydeps
 
+Rubydeps now only supports ruby 1.9. If you need 1.8.x support then:
+
+    gem install rubydeps -v0.2.0
+
+Notice that in 0.2.0 you should use dot_for instead of create_dot_for.
+
 Dependencies
 ------------
 
-* rcov
+* rcov (only for version 0.2.0)
 * graphviz
 * ruby-graphviz
 
@@ -79,4 +85,4 @@ Copyright
 
 Copyright (c) 2010 Daniel Cadenas. See LICENSE for details.
 
-Development sponsored by [Cubox](http://www.cuboxsa.com)
+Development sponsored by [Cubox](http://www.cuboxlabs.com)

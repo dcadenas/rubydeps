@@ -1,8 +1,12 @@
 require 'file_test_helper'
 
-class Grandparent
-  def self.class_method
+module GrandparentModule
+  def class_method
   end
+end
+
+class Grandparent
+  extend GrandparentModule
 
   def instance_method
   end
@@ -38,7 +42,7 @@ end
 describe "Rubydeps" do
   include FileTestHelper
   it "should show the class level dependencies" do
-    dependencies = Rubydeps.hash_for do
+    dependencies = ::Rubydeps.dependency_hash_for do
       class IHaveAClassLevelDependency
         Son.class_method
       end
@@ -49,7 +53,7 @@ describe "Rubydeps" do
 
   it "should create a dot file" do
     with_files do
-      dependencies = Rubydeps.dot_for do
+      dependencies = ::Rubydeps.create_dot_for do
         class IHaveAClassLevelDependency
           Son.class_method
         end
@@ -60,13 +64,13 @@ describe "Rubydeps" do
   end
 
   it "should be idempotent" do
-    Rubydeps.hash_for do
+    ::Rubydeps.dependency_hash_for do
       class IHaveAClassLevelDependency
         Son.class_method
       end
     end
 
-    dependencies = Rubydeps.hash_for do
+    dependencies = ::Rubydeps.dependency_hash_for do
       class IHaveAClassLevelDependency
         Son.class_method
       end
@@ -76,7 +80,7 @@ describe "Rubydeps" do
   end
 
   it "should show the dependencies between the classes inside the block" do
-    dependencies = Rubydeps.hash_for do
+    dependencies = ::Rubydeps.dependency_hash_for do
       Son.class_method
       Son.new.instance_method
     end
@@ -87,8 +91,8 @@ describe "Rubydeps" do
   end
 
   sample_dir_structure = {'path1/class_a.rb' => <<-CLASSA,
-                             require 'path1/class_b'
-                             require 'path2/class_c'
+                             require './path1/class_b'
+                             require './path2/class_c'
                              class A
                                def depend_on_b_and_c
                                  B.new.b
@@ -101,9 +105,9 @@ describe "Rubydeps" do
 
   it "should not filter classes when no filter is specified" do
     with_files(sample_dir_structure) do
-      load 'path1/class_a.rb'
+      load './path1/class_a.rb'
 
-      dependencies = Rubydeps.hash_for do
+      dependencies = ::Rubydeps.dependency_hash_for do
         A.new.depend_on_b_and_c
       end
 
@@ -113,9 +117,9 @@ describe "Rubydeps" do
 
   it "should filter classes when a path filter is specified" do
     with_files(sample_dir_structure) do
-      load 'path1/class_a.rb'
+      load './path1/class_a.rb'
 
-      dependencies = Rubydeps.hash_for(:path_filter => /path1/) do
+      dependencies = ::Rubydeps.dependency_hash_for(:path_filter => /path1/) do
         A.new.depend_on_b_and_c
       end
 
@@ -125,9 +129,9 @@ describe "Rubydeps" do
 
   it "should filter classes when a class name filter is specified" do
     with_files(sample_dir_structure) do
-      load 'path1/class_a.rb'
+      load './path1/class_a.rb'
 
-      dependencies = Rubydeps.hash_for(:class_name_filter => /C|A/) do
+      dependencies = ::Rubydeps.dependency_hash_for(:class_name_filter => /C|A/) do
         A.new.depend_on_b_and_c
       end
 

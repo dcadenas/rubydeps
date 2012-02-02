@@ -1,15 +1,14 @@
 require 'graphviz'
 require 'set'
-require 'rcovrt'
-require 'rcov'
+require 'call_site_analyzer'
 
 module Rubydeps
-  def self.dot_for(options = {}, &block_to_analyze)
-    dependencies_hash = hash_for(options, &block_to_analyze)
+  def self.create_dot_for(options = {}, &block_to_analyze)
+    dependency_hash = dependency_hash_for(options, &block_to_analyze)
 
-    if dependencies_hash
+    if dependency_hash
       g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
-      dependencies_hash.each do |k,vs|
+      dependency_hash.each do |k,vs|
         if !k.empty? && !vs.empty?
           n1 = g.add_nodes(k.to_s)
           if vs.respond_to?(:each)
@@ -27,69 +26,48 @@ module Rubydeps
     end
   end
 
-  def self.hash_for(options = {}, &block_to_analyze)
-    analyzer = Rcov::CallSiteAnalyzer.new
-    analyzer.run_hooked do
-      block_to_analyze.call
-    end
+  def self.dependency_hash_for(options = {}, &block_to_analyze)
+    dependency_hash, class_location_hash = CallSiteAnalyzer.analyze(&block_to_analyze)
 
     path_filter = options.fetch(:path_filter, /.*/)
+    apply_path_filter(dependency_hash, class_location_hash, path_filter)
+
     class_name_filter = options.fetch(:class_name_filter, /.*/)
+    apply_class_name_filter(dependency_hash, class_name_filter)
 
-    dependency_hash = create_dependency_hash(analyzer, path_filter)
-    clean_hash(dependency_hash, class_name_filter)
+    normalize_class_names(dependency_hash)
   end
 
-private
-  def self.path_filtered_site?(code_site, path_filter)
-    code_site && path_filter =~ File.expand_path(code_site.file)
-  end
+  def self.apply_path_filter(dependency_hash, class_location_hash, path_filter_regexp)
+    return if path_filter_regexp == /.*/
 
-  #we build a hash structured in this way: {"called_class_name1" => ["calling_class_name1", "calling_class_name2"], "called_class_name2" => ...}
-  #TODO: want moar love here
-  def self.create_dependency_hash(analyzer, path_filter)
-    dependency_hash = {}
-    analyzer.analyzed_classes.each do |c|
-      called_class_name = normalize_class_name(c)
-      analyzer.methods_for_class(c).each do |m|
-        called_class_method = "#{c}##{m}"
-        def_site = analyzer.defsite(called_class_method)
-        if path_filtered_site?(def_site, path_filter)
-          calling_class_names = Set.new
-          analyzer.callsites(called_class_method).each do |call_site, _|
-            if path_filtered_site?(call_site, path_filter)
-              calling_class = call_site.calling_class
-              calling_class_name = normalize_class_name(calling_class.to_s)
-              calling_class_names << calling_class_name
-            end
-          end
-          dependency_hash[called_class_name] ||= Set.new
-          dependency_hash[called_class_name] += calling_class_names
+    dependency_hash.each do |called_class, calling_classes|
+      if class_location_hash[called_class] && path_filter_regexp =~ class_location_hash[called_class]
+        calling_classes.select! do |calling_class|
+          path_filter_regexp =~ class_location_hash[calling_class] if class_location_hash[calling_class]
         end
+      else
+        dependency_hash.delete(called_class)
       end
     end
-
-    dependency_hash
   end
 
-  def self.clean_hash(dependency_hash, class_name_filter)
-    cleaned_hash = {}
-    dependency_hash.each do |called_class_name, calling_class_names|
-      if interesting_class_name(called_class_name) && !dependency_hash[called_class_name].empty? && called_class_name =~ class_name_filter
-        cleaned_hash[called_class_name] = (calling_class_names - [nil]).select do |c|
-          interesting_class_name(c) &&
-          c != called_class_name &&
-          c =~ class_name_filter
+  def self.apply_class_name_filter(dependency_hash, class_name_filter_regexp)
+    return if class_name_filter_regexp == /.*/
+
+    dependency_hash.each do |called_class, calling_classes|
+      if class_name_filter_regexp =~ called_class
+        calling_classes.select! do |calling_class|
+          class_name_filter_regexp =~ calling_class
         end
-        cleaned_hash.delete(called_class_name) if cleaned_hash[called_class_name].empty?
+      else
+        dependency_hash.delete(called_class)
       end
     end
-
-    cleaned_hash
   end
 
-  def self.interesting_class_name(class_name)
-    !class_name.empty? && class_name != "Rcov::CallSiteAnalyzer" && class_name != "Rcov::DifferentialAnalyzer"
+  def self.normalize_class_names(dependency_hash)
+    Hash[dependency_hash.map { |k,v| [normalize_class_name(k), v.map{|c| normalize_class_name(c)}] }]
   end
 
   def self.normalize_class_name(klass)

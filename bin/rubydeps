@@ -51,7 +51,7 @@ module Rubydeps
 
     def create_dependencies_dot_for(options)
       ARGV.clear
-      Rubydeps.dot_for(:path_filter => Regexp.new(options[:path_filter]), :class_name_filter => Regexp.new(options[:class_name_filter])) do
+      Rubydeps.create_dot_for(:path_filter => Regexp.new(options[:path_filter]), :class_name_filter => Regexp.new(options[:class_name_filter])) do
         yield
       end
     end
@@ -59,4 +59,3 @@ module Rubydeps
 end
 
 Rubydeps::Runner.start(ARGV)
-
