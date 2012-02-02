@@ -11,12 +11,12 @@ module Rubydeps
       g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
       dependencies_hash.each do |k,vs|
         if !k.empty? && !vs.empty?
-          n1 = g.add_node(k.to_s)
+          n1 = g.add_nodes(k.to_s)
           if vs.respond_to?(:each)
             vs.each do |v|
               unless v.empty?
-                n2 = g.add_node(v.to_s)
-                g.add_edge(n2, n1)
+                n2 = g.add_nodes(v.to_s)
+                g.add_edges(n2, n1)
               end
             end
           end
