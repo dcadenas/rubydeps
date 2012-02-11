@@ -12,7 +12,7 @@ spec = Gem::Specification.new do |s|
   s.executables = ["rubydeps"]
 
   s.add_development_dependency(%q<rake-compiler>, ["~> 0.8.0"])
-  s.add_development_dependency(%q<rspec>, ["~> 2.5.1"])
+  s.add_development_dependency(%q<rspec>, ["~> 2.8.0"])
   s.add_development_dependency(%q<file_test_helper>, ["~> 1.0.0"])
   s.add_dependency(%q<ruby_core_source>, ["~> 0.1.5"])
   s.add_dependency(%q<ruby-graphviz>, ["~> 1.0.5"])
