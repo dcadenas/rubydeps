@@ -3,8 +3,7 @@
 #include <iseq.h>
 
 inline static rb_control_frame_t*
-callsite_cfp(rb_control_frame_t* cfp)
-{
+callsite_cfp(rb_control_frame_t* cfp){
   cfp = RUBY_VM_PREVIOUS_CONTROL_FRAME(cfp);
   if (cfp->iseq != 0 && cfp->pc != 0) {
     return cfp;
@@ -17,18 +16,21 @@ callsite_cfp(rb_control_frame_t* cfp)
   return NULL;
 }
 
-inline static VALUE
-real_class(VALUE klass)
-{
-  if (klass) {
-    if (TYPE(klass) == T_ICLASS) {
-      return RBASIC(klass)->klass;
-    }
-    else if (FL_TEST(klass, FL_SINGLETON)) {
-      return rb_iv_get(klass, "__attached__");
+static VALUE
+rb_mod_to_s(VALUE klass){
+  if (FL_TEST(klass, FL_SINGLETON)) {
+    VALUE v = rb_iv_get(klass, "__attached__");
+
+    switch (TYPE(v)) {
+      case T_CLASS: case T_MODULE:
+        return rb_inspect(v);
+        break;
+      default:
+        return rb_any_to_s(v);
+        break;
     }
   }
-  return klass;
+  return rb_str_dup(rb_class_name(klass));
 }
 
 static VALUE dependency_array;
@@ -55,8 +57,8 @@ event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
     return;
   }
 
-  const char* class_name = rb_class2name(real_class(klass));
-  const char* prevklass_name = rb_class2name(real_class(prevklass));
+  const char* class_name = RSTRING_PTR(rb_mod_to_s(klass));
+  const char* prevklass_name = RSTRING_PTR(rb_mod_to_s(prevklass));
 
   if(strcmp(class_name, "Object") == 0 || strcmp(prevklass_name, "Object") == 0){
     return;
