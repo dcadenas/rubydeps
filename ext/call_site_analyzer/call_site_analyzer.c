@@ -24,26 +24,28 @@ rb_mod_to_s(VALUE klass){
     switch (TYPE(v)) {
       case T_CLASS: case T_MODULE:
         return rb_inspect(v);
-        break;
       default:
         return rb_any_to_s(v);
-        break;
     }
   }
   return rb_str_dup(rb_class_name(klass));
 }
 
 static VALUE dependency_array;
+static int inhook = 0;
 
-//NOTE 1: don't do rb_funcalls here as it can cause stack overflows
-//NOTE 2: this function should be as optimized as possible as it's being called on each ruby method call
+//NOTE: this function should be as optimized as possible as it's being called on each ruby method call
 static void
 event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
+  if(inhook == 1) return;
+  inhook = 1;
+
   rb_control_frame_t* cfp = GET_THREAD()->cfp;
 
   rb_iseq_t* current_iseq = cfp->iseq;
   rb_control_frame_t* previous_cfp = callsite_cfp(cfp);
   if(previous_cfp == NULL){
+    inhook = 0;
     return;
   }
 
@@ -54,6 +56,7 @@ event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
 
   //we ignore dependencies with the same class and with Object
   if(klass == prevklass){
+    inhook = 0;
     return;
   }
 
@@ -61,6 +64,7 @@ event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
   const char* prevklass_name = RSTRING_PTR(rb_mod_to_s(prevklass));
 
   if(strcmp(class_name, "Object") == 0 || strcmp(prevklass_name, "Object") == 0){
+    inhook = 0;
     return;
   }
 
@@ -80,6 +84,8 @@ event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
     rb_hash_aset(class_location_hash, rb_str_new2(class_name), filepath);
     rb_hash_aset(class_location_hash, rb_str_new2(prevklass_name), previous_iseq->filepath);
   }
+
+  inhook = 0;
 }
 
 static int uniq_calling_arrays(VALUE called_class, VALUE calling_class_array, VALUE extra){
