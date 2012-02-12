@@ -16,55 +16,57 @@ callsite_cfp(rb_control_frame_t* cfp){
   return NULL;
 }
 
-static VALUE
-rb_mod_to_s(VALUE klass){
+inline static VALUE
+get_real_class(VALUE klass){
   if (FL_TEST(klass, FL_SINGLETON)) {
     VALUE v = rb_iv_get(klass, "__attached__");
 
     switch (TYPE(v)) {
       case T_CLASS: case T_MODULE:
-        return rb_inspect(v);
+        return v;
       default:
-        return rb_any_to_s(v);
+        return rb_class_real(klass);
     }
   }
-  return rb_str_dup(rb_class_name(klass));
+  return klass;
+}
+
+inline static VALUE
+class_of_obj_or_class(VALUE obj_or_class){
+  switch(TYPE(obj_or_class)){
+    case T_CLASS: case T_MODULE:
+      return obj_or_class;
+    default:
+      return rb_obj_class(obj_or_class);
+  }
 }
 
 static VALUE dependency_array;
-static int inhook = 0;
 
 //NOTE: this function should be as optimized as possible as it's being called on each ruby method call
 static void
 event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
-  if(inhook == 1) return;
-  inhook = 1;
-
   rb_control_frame_t* cfp = GET_THREAD()->cfp;
 
-  rb_iseq_t* current_iseq = cfp->iseq;
   rb_control_frame_t* previous_cfp = callsite_cfp(cfp);
   if(previous_cfp == NULL){
-    inhook = 0;
     return;
   }
+
+  klass = class_of_obj_or_class(self);
 
   rb_iseq_t* previous_iseq = previous_cfp->iseq;
+  VALUE prevklass = get_real_class(previous_iseq->klass);
 
-  klass = current_iseq->klass;
-  VALUE prevklass = previous_iseq->klass;
-
-  //we ignore dependencies with the same class and with Object
+  //we return if there's a dependency with the same class or with Object
   if(klass == prevklass){
-    inhook = 0;
     return;
   }
 
-  const char* class_name = RSTRING_PTR(rb_mod_to_s(klass));
-  const char* prevklass_name = RSTRING_PTR(rb_mod_to_s(prevklass));
+  const char* class_name = rb_class2name(klass);
+  const char* prevklass_name = rb_class2name(prevklass);
 
-  if(strcmp(class_name, "Object") == 0 || strcmp(prevklass_name, "Object") == 0){
-    inhook = 0;
+  if(TYPE(klass) == T_FALSE || TYPE(prevklass) == T_FALSE){
     return;
   }
 
@@ -78,14 +80,12 @@ event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
   rb_ary_push(calling_class_array, rb_str_new2(prevklass_name));
 
   //update class_location_hash
-  VALUE filepath = current_iseq->filepath;
+  VALUE filepath = cfp->iseq->filepath;
   if(!NIL_P(filepath)){
     VALUE class_location_hash = rb_ary_entry(dependency_array, 1);
     rb_hash_aset(class_location_hash, rb_str_new2(class_name), filepath);
     rb_hash_aset(class_location_hash, rb_str_new2(prevklass_name), previous_iseq->filepath);
   }
-
-  inhook = 0;
 }
 
 static int uniq_calling_arrays(VALUE called_class, VALUE calling_class_array, VALUE extra){

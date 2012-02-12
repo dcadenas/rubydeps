@@ -79,9 +79,21 @@ describe "Rubydeps" do
     dependencies.should == {"Parent"=>["Son"]}
   end
 
+  it "should show the dependency from an object singleton method" do
+    dependencies = ::Rubydeps.dependency_hash_for do
+      s = Son.new
+      def s.attached_method
+        Grandparent.class_method
+      end
+      s.attached_method
+    end
+
+    dependencies.keys.should == ["Grandparent"]
+    dependencies["Grandparent"].should == ["Son"]
+  end
+
   it "should show the dependencies between the classes inside the block" do
     dependencies = ::Rubydeps.dependency_hash_for do
-      Son.class_method
       Son.new.instance_method
     end
 
