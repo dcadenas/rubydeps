@@ -28,7 +28,7 @@ get_real_class(VALUE klass){
         return rb_class_real(klass);
     }
   }
-  return klass;
+  return rb_class_real(klass);
 }
 
 inline static VALUE
@@ -43,48 +43,66 @@ class_of_obj_or_class(VALUE obj_or_class){
 
 static VALUE dependency_array;
 
+inline static void
+add_dependency(VALUE calling_class, VALUE called_class, VALUE called_class_file_path, VALUE is_guess){
+  if(called_class == calling_class){
+    return;
+  }
+
+  const char* called_class_name = rb_class2name(called_class);
+  const char* calling_class_name= rb_class2name(calling_class);
+
+  //update depedency_hash
+  VALUE dependency_hash = rb_ary_entry(dependency_array, 0);
+  VALUE calling_class_array = rb_hash_aref(dependency_hash, rb_str_new2(called_class_name));
+  if(NIL_P(calling_class_array)){
+    calling_class_array = rb_ary_new();
+    rb_hash_aset(dependency_hash, rb_str_new2(called_class_name), calling_class_array);
+  }
+  rb_ary_push(calling_class_array, rb_str_new2(calling_class_name));
+
+  //update class_location_hash
+  if(!NIL_P(called_class_file_path)){
+    VALUE class_location_hash = rb_ary_entry(dependency_array, 1);
+
+    VALUE file_path_array = rb_hash_aref(class_location_hash, rb_str_new2(called_class_name));
+    if(NIL_P(file_path_array)){
+      file_path_array = rb_ary_new();
+      rb_hash_aset(class_location_hash, rb_str_new2(called_class_name), file_path_array);
+    }
+
+    VALUE last_guess = rb_ary_entry(file_path_array, 1);
+    if(last_guess == Qnil || last_guess == Qtrue){
+      rb_ary_store(file_path_array, 0, called_class_file_path);
+      rb_ary_store(file_path_array, 1, is_guess);
+    }
+  }
+}
+
 //NOTE: this function should be as optimized as possible as it's being called on each ruby method call
 static void
 event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
   rb_control_frame_t* cfp = GET_THREAD()->cfp;
+  VALUE class_of_called_object = class_of_obj_or_class(self);
+  VALUE called_class = get_real_class(cfp->iseq->klass);
 
   rb_control_frame_t* previous_cfp = callsite_cfp(cfp);
-  if(previous_cfp == NULL){
-    return;
+  if(previous_cfp != NULL){
+    VALUE calling_class = get_real_class(previous_cfp->iseq->klass);
+
+    if(class_of_called_object != calling_class){
+      if(class_of_called_object != called_class){
+        //we can't assume that the location of class_of_called_object is the same as called_class, so guess == true
+        add_dependency(calling_class, class_of_called_object, cfp->iseq->filepath, Qtrue);
+      } else {
+        add_dependency(calling_class, called_class, cfp->iseq->filepath, Qfalse);
+      }
+    }
   }
 
-  klass = class_of_obj_or_class(self);
-
-  rb_iseq_t* previous_iseq = previous_cfp->iseq;
-  VALUE prevklass = get_real_class(previous_iseq->klass);
-
-  //we return if there's a dependency with the same class or with Object
-  if(klass == prevklass){
-    return;
-  }
-
-  const char* class_name = rb_class2name(klass);
-  const char* prevklass_name = rb_class2name(prevklass);
-
-  if(TYPE(klass) == T_FALSE || TYPE(prevklass) == T_FALSE){
-    return;
-  }
-
-  //update depedency_hash
-  VALUE dependency_hash = rb_ary_entry(dependency_array, 0);
-  VALUE calling_class_array = rb_hash_aref(dependency_hash, rb_str_new2(class_name));
-  if(NIL_P(calling_class_array)){
-    calling_class_array = rb_ary_new();
-    rb_hash_aset(dependency_hash, rb_str_new2(class_name), calling_class_array);
-  }
-  rb_ary_push(calling_class_array, rb_str_new2(prevklass_name));
-
-  //update class_location_hash
-  VALUE filepath = cfp->iseq->filepath;
-  if(!NIL_P(filepath)){
-    VALUE class_location_hash = rb_ary_entry(dependency_array, 1);
-    rb_hash_aset(class_location_hash, rb_str_new2(class_name), filepath);
-    rb_hash_aset(class_location_hash, rb_str_new2(prevklass_name), previous_iseq->filepath);
+  //this dependency represents inheritance/inclusion/extension
+  if(class_of_called_object != called_class){
+    add_dependency(class_of_called_object, called_class, cfp->iseq->filepath, Qfalse);
   }
 }
 

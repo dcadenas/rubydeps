@@ -15,6 +15,14 @@ module Rubydeps
       create_dependencies_dot_for(options) do
         ::Test::Unit::AutoRunner.run
       end
+
+      #gem 'test-unit'
+      #require 'test/unit'
+      #require 'test/unit/autorunner'
+
+      #create_dependencies_dot_for(options) do
+      #  ::Test::Unit::AutoRunner.run(true, "#{`pwd`.chomp}/test", ["--add=#{`pwd`.chomp}/test"])
+      #end
     end
 
     desc "rspec", "Create the dependency graph after runnning the rspec tests"

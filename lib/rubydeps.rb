@@ -4,7 +4,7 @@ require 'call_site_analyzer'
 
 module Rubydeps
   def self.create_dot_for(options = {}, &block_to_analyze)
-    dependency_hash = dependency_hash_for(options, &block_to_analyze)
+    dependency_hash, class_location_hash = dependency_hash_for(options, &block_to_analyze)
 
     if dependency_hash
       g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
@@ -30,44 +30,48 @@ module Rubydeps
     dependency_hash, class_location_hash = CallSiteAnalyzer.analyze(&block_to_analyze)
 
     path_filter = options.fetch(:path_filter, /.*/)
-    apply_path_filter(dependency_hash, class_location_hash, path_filter)
-
     class_name_filter = options.fetch(:class_name_filter, /.*/)
-    apply_class_name_filter(dependency_hash, class_name_filter)
+    classes_to_remove = get_classes_to_remove(dependency_hash, class_location_hash, path_filter, class_name_filter)
 
-    normalize_class_names(dependency_hash)
-  end
-
-  def self.apply_path_filter(dependency_hash, class_location_hash, path_filter_regexp)
-    return if path_filter_regexp == /.*/
-
-    dependency_hash.each do |called_class, calling_classes|
-      if class_location_hash[called_class] && path_filter_regexp =~ class_location_hash[called_class]
-        calling_classes.select! do |calling_class|
-          path_filter_regexp =~ class_location_hash[calling_class] if class_location_hash[calling_class]
-        end
-      else
-        dependency_hash.delete(called_class)
+    while(!classes_to_remove.empty?) do
+      klass_to_remove = classes_to_remove.pop
+      classes_calling_class_to_remove = dependency_hash[klass_to_remove]
+      classes_called_by_class_to_remove = dependency_hash.keys.select do |called_class|
+        dependency_hash[called_class].member? klass_to_remove
       end
+
+      #transitive dependencies, hmmm, not sure is a good idea
+      #if classes_calling_class_to_remove && !classes_calling_class_to_remove.empty?
+      #  classes_called_by_class_to_remove.each do |called_class|
+      #    dependency_hash[called_class] |= classes_calling_class_to_remove
+      #  end
+      #end
+
+      dependency_hash.delete(klass_to_remove)
+      classes_called_by_class_to_remove.each do |called_class|
+        if dependency_hash[called_class]
+          dependency_hash[called_class].delete(klass_to_remove)
+
+          if dependency_hash[called_class].empty?
+            dependency_hash.delete(called_class)
+          end
+        end
+      end
+
     end
+
+    [normalize_class_names(dependency_hash), class_location_hash]
   end
 
-  def self.apply_class_name_filter(dependency_hash, class_name_filter_regexp)
-    return if class_name_filter_regexp == /.*/
-
-    dependency_hash.each do |called_class, calling_classes|
-      if class_name_filter_regexp =~ called_class
-        calling_classes.select! do |calling_class|
-          class_name_filter_regexp =~ calling_class
-        end
-      else
-        dependency_hash.delete(called_class)
-      end
+  def self.get_classes_to_remove(dependency_hash, class_location_hash, path_filter, class_name_filter)
+    (dependency_hash.keys | dependency_hash.values.flatten).reject do |klass|
+      class_name_filter =~ klass &&
+      class_location_hash[klass] && !class_location_hash[klass].empty? && class_location_hash[klass].first =~ path_filter
     end
   end
 
   def self.normalize_class_names(dependency_hash)
-    Hash[dependency_hash.map { |k,v| [normalize_class_name(k), v.map{|c| normalize_class_name(c)}] }]
+    Hash[dependency_hash.map { |k,v| [normalize_class_name(k), v.map{|c| c == k ? nil : normalize_class_name(c)}.compact] }]
   end
 
   def self.normalize_class_name(klass)

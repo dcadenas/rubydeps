@@ -33,6 +33,14 @@ class Son
   def self.class_method2
   end
 
+  def instance_method_that_calls_parent_class_method
+    Parent.class_method
+  end
+
+  def instance_method_calling_another_instance_method(second_receiver)
+    second_receiver.instance_method
+  end
+
   def instance_method
     Parent.class_method
     Grandparent.class_method
@@ -42,7 +50,7 @@ end
 describe "Rubydeps" do
   include FileTestHelper
   it "should show the class level dependencies" do
-    dependencies = ::Rubydeps.dependency_hash_for do
+    dependencies, _ = ::Rubydeps.dependency_hash_for do
       class IHaveAClassLevelDependency
         Son.class_method
       end
@@ -70,7 +78,7 @@ describe "Rubydeps" do
       end
     end
 
-    dependencies = ::Rubydeps.dependency_hash_for do
+    dependencies, _ = ::Rubydeps.dependency_hash_for do
       class IHaveAClassLevelDependency
         Son.class_method
       end
@@ -80,7 +88,7 @@ describe "Rubydeps" do
   end
 
   it "should show the dependency from an object singleton method" do
-    dependencies = ::Rubydeps.dependency_hash_for do
+    dependencies, _ = ::Rubydeps.dependency_hash_for do
       s = Son.new
       def s.attached_method
         Grandparent.class_method
@@ -88,18 +96,20 @@ describe "Rubydeps" do
       s.attached_method
     end
 
-    dependencies.keys.should == ["Grandparent"]
+    dependencies.keys.should == ["Grandparent", "GrandparentModule"]
     dependencies["Grandparent"].should == ["Son"]
+    dependencies["GrandparentModule"].should == ["Grandparent"]
   end
 
   it "should show the dependencies between the classes inside the block" do
-    dependencies = ::Rubydeps.dependency_hash_for do
+    dependencies, _ = ::Rubydeps.dependency_hash_for do
       Son.new.instance_method
     end
 
-    dependencies.keys.should =~ ["Parent", "Grandparent"]
+    dependencies.keys.should =~ ["Parent", "Grandparent", "GrandparentModule"]
     dependencies["Parent"].should == ["Son"]
     dependencies["Grandparent"].should =~ ["Son", "Parent"]
+    dependencies["GrandparentModule"].should == ["Grandparent"]
   end
 
   sample_dir_structure = {'path1/class_a.rb' => <<-CLASSA,
@@ -119,7 +129,7 @@ describe "Rubydeps" do
     with_files(sample_dir_structure) do
       load './path1/class_a.rb'
 
-      dependencies = ::Rubydeps.dependency_hash_for do
+      dependencies, _ = ::Rubydeps.dependency_hash_for do
         A.new.depend_on_b_and_c
       end
 
@@ -131,7 +141,7 @@ describe "Rubydeps" do
     with_files(sample_dir_structure) do
       load './path1/class_a.rb'
 
-      dependencies = ::Rubydeps.dependency_hash_for(:path_filter => /path1/) do
+      dependencies, _ = ::Rubydeps.dependency_hash_for(:path_filter => /path1/) do
         A.new.depend_on_b_and_c
       end
 
@@ -143,11 +153,19 @@ describe "Rubydeps" do
     with_files(sample_dir_structure) do
       load './path1/class_a.rb'
 
-      dependencies = ::Rubydeps.dependency_hash_for(:class_name_filter => /C|A/) do
+      dependencies, _ = ::Rubydeps.dependency_hash_for(:class_name_filter => /C|A/) do
         A.new.depend_on_b_and_c
       end
 
       dependencies.should == {"C"=>["A"]}
     end
+  end
+
+  it "should create correct dependencies for 2 instance methods called in a row" do
+    dependencies, _ = ::Rubydeps.dependency_hash_for do
+      Son.new.instance_method_calling_another_instance_method(Parent.new)
+    end
+
+    dependencies.should == {"Parent"=>["Son"]}
   end
 end
