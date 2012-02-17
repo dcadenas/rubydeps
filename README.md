@@ -8,7 +8,9 @@ Sample output
 
 This is the result of running rubydeps on the [Mechanize](http://github.com/tenderlove/mechanize) tests:
 
-    rubydeps testunit --path-filter='mechanize/lib'
+```bash
+rubydeps testunit --path-filter='mechanize/lib'
+```
 
 ![Mechanize dependencies](https://github.com/dcadenas/rubydeps/raw/master/mechanize-deps.png)
 
@@ -22,15 +24,27 @@ Rubydeps will run your test suite to record the call graph of your project and u
 First of all, be sure to step into the root directory of your project, rubydeps searches for ./spec or ./test dirs from there.
 For example, if we want to graph the Rails activemodel dependency graph we'd cd to rails/activemodel and from there we'd write:
 
-    rubydeps testunit #to run Test::Unit tests
+```bash
+rubydeps testunit #to run Test::Unit tests
+```    
+
 or
-    rubydeps rspec #to run RSpec tests
+
+```bash
+rubydeps rspec #to run RSpec tests
+```
+
 or
-    rubydeps rspec2 #to run RSpec 2 tests
+
+```bash
+rubydeps rspec2 #to run RSpec 2 tests
+```
 
 This will output a rubydeps.dot. You can convert the dot file to any image format you like using the dot utility that comes with the graphviz installation e.g.:
 
-    dot -Tsvg rubydeps.dot > rubydeps.svg
+```bash
+dot -Tsvg rubydeps.dot > rubydeps.svg
+```
 
 Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so it's a quick bird's eye view to check your project coverage.
 
@@ -45,20 +59,26 @@ Library usage
 
 Just require rubydeps and pass a block to analyze to the dot_for method.
 
-    require 'rubydeps'
+```ruby
+require 'rubydeps'
 
-    Rubydeps.create_dot_for(:path_filter => path_filter_regexp, :class_name_filter => class_name_filter_regexp) do
-      //your code goes here
-    end
+Rubydeps.create_dot_for(:path_filter => path_filter_regexp, :class_name_filter => class_name_filter_regexp) do
+    # your code goes here
+end
+```
 
 Installation
 ------------
 
-    gem install rubydeps
+```bash
+gem install rubydeps
+```
 
 Rubydeps now only supports ruby 1.9. If you need 1.8.x support then:
 
-    gem install rubydeps -v0.2.0
+```bash
+gem install rubydeps -v0.2.0
+```
 
 Notice that in 0.2.0 you should use dot_for instead of create_dot_for.
 
