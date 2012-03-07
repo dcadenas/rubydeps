@@ -61,7 +61,7 @@ describe "Rubydeps" do
 
   it "should create a dot file" do
     with_files do
-      dependencies = ::Rubydeps.create_dot_for do
+      ::Rubydeps.analyze do
         class IHaveAClassLevelDependency
           Son.class_method
         end
@@ -157,6 +157,19 @@ describe "Rubydeps" do
         A.new.depend_on_b_and_c
       end
 
+      dependencies.should == {"C"=>["A"]}
+    end
+  end
+
+  it "should be capable of dumping the whole dependency data into a file for later filtering" do
+    with_files(sample_dir_structure) do
+      load './path1/class_a.rb'
+
+      ::Rubydeps.analyze(:to_file => 'dependencies.file') do
+        A.new.depend_on_b_and_c
+      end
+
+      dependencies, _ = ::Rubydeps.dependency_hash_for(:from_file => 'dependencies.file', :class_name_filter => /C|A/)
       dependencies.should == {"C"=>["A"]}
     end
   end

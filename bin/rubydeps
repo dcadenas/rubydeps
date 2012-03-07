@@ -5,6 +5,8 @@ require 'thor'
 module Rubydeps
   class Runner < Thor
     desc "testunit", "Create the dependency graph after runnning the testunit tests"
+    method_option :to_file, :type => :string
+    method_option :from_file, :type => :string
     method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
     method_option :class_name_filter, :type => :string, :default => '', :required => true
     def testunit
@@ -26,6 +28,8 @@ module Rubydeps
     end
 
     desc "rspec", "Create the dependency graph after runnning the rspec tests"
+    method_option :to_file, :type => :string
+    method_option :from_file, :type => :string
     #TODO: this breaks when using underscores, investigate
     method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
     method_option :class_name_filter, :type => :string, :default => '', :required => true
@@ -42,6 +46,8 @@ module Rubydeps
     end
 
     desc "rspec2", "Create the dependency graph after runnning the rspec 2 tests"
+    method_option :to_file, :type => :string
+    method_option :from_file, :type => :string
     method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
     method_option :class_name_filter, :type => :string, :default => '', :required => true
     def rspec2
@@ -59,7 +65,10 @@ module Rubydeps
 
     def create_dependencies_dot_for(options)
       ARGV.clear
-      Rubydeps.create_dot_for(:path_filter => Regexp.new(options[:path_filter]), :class_name_filter => Regexp.new(options[:class_name_filter])) do
+      Rubydeps.analyze(:path_filter => Regexp.new(options[:path_filter]),
+                              :class_name_filter => Regexp.new(options[:class_name_filter]),
+                              :to_file => options[:to_file],
+                              :from_file => options[:from_file]) do
         yield
       end
     end

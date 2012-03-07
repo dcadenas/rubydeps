@@ -50,19 +50,29 @@ Notice that sometimes you may have missing dependencies as we graph the dependen
 
 ### Command line options
 
-The --path-filter option specifies a regexp that matches the path of the files you are interested in analyzing. For example you could have filters like 'project_name/app|project_name/lib' to analyze only code that is located in the 'app' and 'lib' dirs or as an alternative you could just exclude some directory you are not interested using a negative regexp like 'project_name(?!.*test)'
+The `--path_filter` option specifies a regexp that matches the path of the files you are interested in analyzing. For example you could have filters like `'project_name/app|project_name/lib'` to analyze only code that is located in the `app` and `lib` dirs or as an alternative you could just exclude some directory you are not interested using a negative regexp like `'project_name(?!.*test)'`
 
-The --class_name_filter option is similar to the --path_filter options except that the regexp is matched against the class names (i.e. graph node names).
+The `--class_name_filter` option is similar to the `--path_filter` options except that the regexp is matched against the class names (i.e. graph node names).
+
+The `--to_file` option dumps the dependency graph data to a file so you can do filtering later, it does not create a dot file.
+
+The `--from_file` option is used with the file dumped through `--to_file`. When you use this option the tests (or block) are not ran, the dependency graph is loaded directly from the file. This is useful to avoid rerunning code that didn't change just for the purpose of filtering with different combinations e.g.:
+
+```bash
+rubydeps rspec2 --to_file='dependencies.dump'
+rubydeps rspec2 --from_file='dependencies.dump' --path_filter='app/models'
+rubydeps rspec2 --from_file='dependencies.dump' --path_filter='app/models|app/controllers'
+```
 
 Library usage
 -------------
 
-Just require rubydeps and pass a block to analyze to the dot_for method.
+Just require rubydeps and pass a block to analyze to the `analyze` method.
 
 ```ruby
 require 'rubydeps'
 
-Rubydeps.create_dot_for(:path_filter => path_filter_regexp, :class_name_filter => class_name_filter_regexp) do
+Rubydeps.analyze(:path_filter => path_filter_regexp, :class_name_filter => class_name_filter_regexp, :to_file => "dependencies.dump") do
     # your code goes here
 end
 ```
@@ -80,7 +90,7 @@ Rubydeps now only supports ruby 1.9. If you need 1.8.x support then:
 gem install rubydeps -v0.2.0
 ```
 
-Notice that in 0.2.0 you should use dot_for instead of create_dot_for.
+Notice that in 0.2.0 you should use dot_for instead of analyze.
 
 Dependencies
 ------------
@@ -103,6 +113,6 @@ Note on Patches/Pull Requests
 Copyright
 ---------
 
-Copyright (c) 2010 Daniel Cadenas. See LICENSE for details.
+Copyright (c) 2012 Daniel Cadenas. See LICENSE for details.
 
 Development sponsored by [Cubox](http://www.cuboxlabs.com)

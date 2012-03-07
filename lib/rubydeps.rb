@@ -3,31 +3,41 @@ require 'set'
 require 'call_site_analyzer'
 
 module Rubydeps
-  def self.create_dot_for(options = {}, &block_to_analyze)
+  def self.analyze(options = {}, &block_to_analyze)
     dependency_hash, class_location_hash = dependency_hash_for(options, &block_to_analyze)
 
-    if dependency_hash
-      g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
-      dependency_hash.each do |k,vs|
-        if !k.empty? && !vs.empty?
-          n1 = g.add_nodes(k.to_s)
-          if vs.respond_to?(:each)
-            vs.each do |v|
-              unless v.empty?
-                n2 = g.add_nodes(v.to_s)
-                g.add_edges(n2, n1)
+    if options[:to_file]
+      File.open(options[:to_file], 'w') do |f|
+        f.write Marshal.dump([dependency_hash, class_location_hash])
+      end
+    else
+      if dependency_hash
+        g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
+        dependency_hash.each do |k,vs|
+          if !k.empty? && !vs.empty?
+            n1 = g.add_nodes(k.to_s)
+            if vs.respond_to?(:each)
+              vs.each do |v|
+                unless v.empty?
+                  n2 = g.add_nodes(v.to_s)
+                  g.add_edges(n2, n1)
+                end
               end
             end
           end
         end
-      end
 
-      g.output( :dot => "rubydeps.dot" )
+        g.output( :dot => "rubydeps.dot" )
+      end
     end
   end
 
   def self.dependency_hash_for(options = {}, &block_to_analyze)
-    dependency_hash, class_location_hash = CallSiteAnalyzer.analyze(&block_to_analyze)
+    dependency_hash, class_location_hash = if options[:from_file]
+                                             File.open(options[:from_file]) { |f| Marshal.load(f) }
+                                           else
+                                             CallSiteAnalyzer.analyze(&block_to_analyze)
+                                           end
 
     path_filter = options.fetch(:path_filter, /.*/)
     class_name_filter = options.fetch(:class_name_filter, /.*/)
