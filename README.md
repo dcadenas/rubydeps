@@ -82,7 +82,7 @@ Installation
 ------------
 
 ```bash
-gem install rubydeps
+gem install rubydeps --pre
 ```
 
 Rubydeps now only supports ruby 1.9. If you need 1.8.x support then:
