@@ -85,7 +85,7 @@ module Rubydeps
   end
 
   def self.normalize_class_name(klass)
-    good_class_name = klass.gsub(/#<Class:(.+)>/, '\1')
+    good_class_name = klass.gsub(/#<(.+):(.+)>/, 'Instance of \1')
     good_class_name.gsub!(/\([^\)]*\)/, "")
     good_class_name.gsub(/0x[\da-fA-F]+/, '(hex number)')
   end
