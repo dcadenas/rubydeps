@@ -7,7 +7,7 @@ module Rubydeps
     dependency_hash, class_location_hash = dependency_hash_for(options, &block_to_analyze)
 
     if options[:to_file]
-      File.open(options[:to_file], 'w') do |f|
+      File.open(options[:to_file], 'wb') do |f|
         f.write Marshal.dump([dependency_hash, class_location_hash])
       end
     else
@@ -34,7 +34,7 @@ module Rubydeps
 
   def self.dependency_hash_for(options = {}, &block_to_analyze)
     dependency_hash, class_location_hash = if options[:from_file]
-                                             File.open(options[:from_file]) { |f| Marshal.load(f) }
+                                             Marshal.load(File.binread(options[:from_file]))
                                            else
                                              CallSiteAnalyzer.analyze(&block_to_analyze)
                                            end
