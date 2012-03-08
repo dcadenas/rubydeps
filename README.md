@@ -7,13 +7,13 @@ A tool to create class dependency graphs from test suites
 Sample output
 -------------
 
-This is the result of running rubydeps on the [Mechanize](http://github.com/tenderlove/mechanize) tests:
+This is the result of running rubydeps on the [Rake](https://github.com/jimweirich/rake) tests:
 
 ```bash
-rubydeps testunit --path-filter='mechanize/lib'
+rubydeps testunit --class_name_filter='^Rake'
 ```
 
-![Mechanize dependencies](https://github.com/dcadenas/rubydeps/raw/master/mechanize-deps.png)
+![Rake dependencies](https://github.com/dcadenas/rubydeps/raw/master/rake-deps.png)
 
 
 Command line usage

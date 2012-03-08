@@ -18,5 +18,6 @@ coverage
 rdoc
 pkg
 tmp
+*.svg
 
 ## PROJECT::SPECIFIC
