@@ -2,6 +2,11 @@
 #include <vm_core.h>
 #include <iseq.h>
 
+// Fix compile error in ruby 1.9.3
+#ifdef RTYPEDDATA_DATA
+#define ruby_current_thread ((rb_thread_t *)RTYPEDDATA_DATA(rb_thread_current()))
+#endif
+
 inline static rb_control_frame_t*
 callsite_cfp(rb_control_frame_t* cfp){
   cfp = RUBY_VM_PREVIOUS_CONTROL_FRAME(cfp);
