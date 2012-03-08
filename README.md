@@ -57,12 +57,12 @@ The `--class_name_filter` option is similar to the `--path_filter` options excep
 
 The `--to_file` option dumps the dependency graph data to a file so you can do filtering later, it does not create a dot file.
 
-The `--from_file` option is used with the file dumped through `--to_file`. When you use this option the tests (or block) are not ran, the dependency graph is loaded directly from the file. This is useful to avoid rerunning code that didn't change just for the purpose of filtering with different combinations e.g.:
+The `--from_file` option is only available when you don't specify a test command. Its argument is the file dumped through `--to_file` in a previous run. When you use this option the tests (or block) are not ran, the dependency graph is loaded directly from the file. This is useful to avoid rerunning code that didn't change just for the purpose of filtering with different combinations e.g.:
 
 ```bash
 rubydeps rspec2 --to_file='dependencies.dump'
-rubydeps rspec2 --from_file='dependencies.dump' --path_filter='app/models'
-rubydeps rspec2 --from_file='dependencies.dump' --path_filter='app/models|app/controllers'
+rubydeps --from_file='dependencies.dump' --path_filter='app/models'
+rubydeps --from_file='dependencies.dump' --path_filter='app/models|app/controllers'
 ```
 
 Library usage
