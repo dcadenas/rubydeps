@@ -10,21 +10,20 @@ module Rubydeps
     method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
     method_option :class_name_filter, :type => :string, :default => '', :required => true
     def testunit
-      require 'test/unit'
+      require 'minitest/unit'
+      require 'test/unit/assertions'
+      require 'test/unit/testcase'
+
+      $LOAD_PATH.unshift("#{`pwd`.chomp}/lib")
+
+      #dirty hack so that minitest doesn't install the at_exit hook and we can run the tests in this same process
+      ::MiniTest::Unit.class_variable_set("@@installed_at_exit", true)
 
       (Dir["./test/**/*_test.rb"] + Dir["./test/**/test_*.rb"]).each { |f| load f unless f =~ /^-/  }
 
       create_dependencies_dot_for(options) do
-        ::Test::Unit::AutoRunner.run
+        ::MiniTest::Unit.new.run([])
       end
-
-      #gem 'test-unit'
-      #require 'test/unit'
-      #require 'test/unit/autorunner'
-
-      #create_dependencies_dot_for(options) do
-      #  ::Test::Unit::AutoRunner.run(true, "#{`pwd`.chomp}/test", ["--add=#{`pwd`.chomp}/test"])
-      #end
     end
 
     desc "rspec", "Create the dependency graph after runnning the rspec tests"
