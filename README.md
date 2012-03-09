@@ -38,17 +38,17 @@ Rubydeps will run your test suite to record the call graph of your project and u
 
 4. The next step is reading the dump file to generate the graphviz dot graph `rubydeps.dot` with any filter you specify.
 
-```bash
-rubydeps --path_filter='app/models'
-```
+    ```bash
+    rubydeps --path_filter='app/models'
+    ```
 
 5. Now you are in [Graphviz](http://www.graphviz.org) realm. You can convert the dot file to any image format with your prefered orientations and layouts with the dot utility that comes with the graphviz installation e.g.:
 
-```bash
-dot -Tsvg rubydeps.dot > rubydeps.svg
-```
+    ```bash
+    dot -Tsvg rubydeps.dot > rubydeps.svg
+    ```
 
-Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so you can use it as a quick bird's eye view of your project test coverage.
+   Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so you can use it as a quick bird's eye view of your project test coverage.
 
 ### Command line options
 
@@ -58,10 +58,10 @@ Notice that sometimes you may have missing dependencies as we graph the dependen
 
 * The `--from_file` option is used to specify the dump file generated after the test (or block) run so you can try different filters without needing to rerun the tests. e.g.:
 
-  ```bash
-  rubydeps --from_file='rubydeps.dump' --path_filter='app/models'
-  rubydeps --from_file='rubydeps.dump' --path_filter='app/models|app/controllers'
-  ```
+    ```bash
+    rubydeps --from_file='rubydeps.dump' --path_filter='app/models'
+    rubydeps --from_file='rubydeps.dump' --path_filter='app/models|app/controllers'
+    ```
 
   If you didn't rename the file you can skip this option as it will use the default `rubydeps.dump` 
 
