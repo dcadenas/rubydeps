@@ -25,7 +25,7 @@ Rubydeps will run your test suite to record the call graph of your project and u
 
 1. Add Rubydeps to your `Gemfile` and `bundle install`:
 
-        gem 'rubydeps', :group => :test
+        gem 'rubydeps', '0.9.2.pre', :group => :test
 
 2. Launch Rubydeps by inserting this line in your `test/test_helper.rb` (*or `spec_helper.rb`, cucumber `env.rb`, or whatever
    your preferred test framework uses*):
