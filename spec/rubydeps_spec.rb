@@ -48,7 +48,6 @@ class Son
 end
 
 describe "Rubydeps" do
-  include FileTestHelper
 
   it "should show the class level dependencies" do
     dependencies, _ = ::Rubydeps.dependency_hash_for do
@@ -58,18 +57,6 @@ describe "Rubydeps" do
     end
 
     dependencies.should == {"Parent"=>["Son"]}
-  end
-
-  it "should create a dot file" do
-    with_files do
-      ::Rubydeps.analyze do
-        class IHaveAClassLevelDependency
-          Son.class_method
-        end
-      end
-
-      File.read("rubydeps.dot").should match("digraph G")
-    end
   end
 
   it "should be idempotent" do
@@ -122,6 +109,8 @@ describe "Rubydeps" do
   end
 
   context "with a dumped dependencies file" do
+    include FileTestHelper
+
     sample_dir_structure = {'path1/class_a.rb' => <<-CLASSA,
                                require '#{File.dirname(__FILE__)}/../lib/rubydeps'
 
@@ -140,16 +129,29 @@ describe "Rubydeps" do
                              'path1/class_b.rb' => 'class B; def b; end end',
                              'path2/class_c.rb' => 'class C; def c; end end'}
 
+    def run(command)
+      system("ruby -I#{File.dirname(__FILE__)}/../lib #{command}")
+    end
+
+    it "should create a dot file" do
+      with_files(sample_dir_structure) do
+        run("./path1/class_a.rb")
+        run("#{File.dirname(__FILE__)}/../bin/rubydeps")
+
+        File.read("rubydeps.dot").should match("digraph G")
+      end
+    end
+
     it "should be a correct test file" do
       with_files(sample_dir_structure) do
-        status = system("ruby -I#{File.dirname(__FILE__)}/../lib ./path1/class_a.rb")
+        status = run("./path1/class_a.rb")
         status.should be_true
       end
     end
 
     it "should not filter classes when no filter is specified" do
       with_files(sample_dir_structure) do
-        system("ruby -I#{File.dirname(__FILE__)}/../lib ./path1/class_a.rb")
+        run("./path1/class_a.rb")
 
         dependencies, _ = ::Rubydeps.dependency_hash_for(:from_file => 'rubydeps.dump')
         dependencies.should == {"B"=>["A"], "C"=>["A"]}
@@ -158,7 +160,7 @@ describe "Rubydeps" do
 
     it "should filter classes when a path filter is specified" do
       with_files(sample_dir_structure) do
-        system("ruby -I#{File.dirname(__FILE__)}/../lib ./path1/class_a.rb")
+        run("./path1/class_a.rb")
 
         dependencies, _ = ::Rubydeps.dependency_hash_for(:from_file => 'rubydeps.dump', :path_filter => /path1/)
         dependencies.should == {"B"=>["A"]}
@@ -167,7 +169,7 @@ describe "Rubydeps" do
 
     it "should filter classes when a class name filter is specified" do
       with_files(sample_dir_structure) do
-        system("ruby -I#{File.dirname(__FILE__)}/../lib ./path1/class_a.rb")
+        run("./path1/class_a.rb")
 
         dependencies, _ = ::Rubydeps.dependency_hash_for(:from_file => 'rubydeps.dump', :class_name_filter => /C|A/)
         dependencies.should == {"C"=>["A"]}

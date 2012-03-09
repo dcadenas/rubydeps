@@ -37,7 +37,7 @@ module Rubydeps
     end
 
     dependency_hash, class_location_hash = CallSiteAnalyzer.result
-    create_output_file(dependency_hash, class_location_hash, :to_file => Rubydeps.default_dump_name, :class_name_filter => /.*/, :path_filter => /.*/)
+    create_output_file(dependency_hash, class_location_hash, :to_file => Rubydeps.default_dump_file_name, :class_name_filter => /.*/, :path_filter => /.*/)
 
     exit exit_status if exit_status
   end
@@ -118,7 +118,7 @@ module Rubydeps
     Hash[dependency_hash.map { |k,v| [normalize_class_name(k), v.map{|c| c == k ? nil : normalize_class_name(c)}.compact] }]
   end
 
-  def self.default_dump_name
+  def self.default_dump_file_name
     "rubydeps.dump"
   end
 end
