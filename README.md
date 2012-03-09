@@ -2,7 +2,8 @@
 rubydeps
 ========
 
-A tool to create class dependency graphs from test suites
+A tool to create class dependency graphs from test suites. I think this is more useful than static analysis of the code base because of the high dynamic aspects of the language 
+
 
 Sample output
 -------------
@@ -47,9 +48,11 @@ This will output a rubydeps.dot. You can convert the dot file to any image forma
 dot -Tsvg rubydeps.dot > rubydeps.svg
 ```
 
-Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so it's a quick bird's eye view to check your project coverage.
+Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so you can use it as a quick bird's eye view of your project test coverage.
 
 ### Command line options
+
+The test commands, as seen above, are `testunit`, `rspec` and `rspec2`.
 
 The `--path_filter` option specifies a regexp that matches the path of the files you are interested in analyzing. For example you could have filters like `'project_name/app|project_name/lib'` to analyze only code that is located in the `app` and `lib` dirs or as an alternative you could just exclude some directory you are not interested using a negative regexp like `'project_name(?!.*test)'`
 
@@ -85,20 +88,20 @@ Installation
 gem install rubydeps --pre
 ```
 
-Rubydeps now only supports ruby 1.9. If you need 1.8.x support then:
+Rubydeps now only supports ruby 1.9.x. If you need 1.8.x support then:
 
 ```bash
 gem install rubydeps -v0.2.0
 ```
 
-Notice that in 0.2.0 you should use dot_for instead of analyze.
+Notice that in 0.2.0 you should use `dot_for` instead of `analyze` and the dump functionality is missing.
 
 Dependencies
 ------------
 
-* rcov (only for version 0.2.0)
 * graphviz
 * ruby-graphviz
+* rcov (only for version 0.2.0)
 
 Note on Patches/Pull Requests
 -----------------------------
