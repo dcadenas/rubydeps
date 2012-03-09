@@ -32,6 +32,8 @@ Rubydeps will run your test suite to record the call graph of your project and u
 
         Rubydeps.start
 
+   Notice that this will slow down your tests so consider adding a conditional bound to some ENV variable or just remove the line when you are done.
+
 3. Run your tests, a file named rubydeps.dump will be created in the project root.
 
 4. The next step is reading the dump file to generate the graphviz dot graph `rubydeps.dot` with any filter you specify.
