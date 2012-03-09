@@ -4,13 +4,13 @@ rubydeps
 
 A tool to create class dependency graphs from test suites.
 
-I think this is more useful than static analysis of the code base because of the high dynamic aspects of the language 
+I think this is more useful than static analysis of the code base because of the high dynamic aspects of the language. 
 
 
 Sample output
 -------------
 
-This is the result of running rubydeps on the [Rake](https://github.com/jimweirich/rake) tests:
+This is the result of running rubydeps on the [Rake](https://github.com/jimweirich/rake) tests after setting up its test helper with `Rubydeps.start`:
 
 ```bash
 rubydeps --class_name_filter='^Rake'
