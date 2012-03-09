@@ -48,7 +48,7 @@ module Rubydeps
     method_option :class_name_filter, :type => :string, :default => '', :required => true
     default_task :load_deps
     def load_deps
-      puts options[:from_file]
+      create_dependencies_dot_for(options)
     end
 
     desc "rspec2", "Create the dependency graph after runnning the rspec 2 tests"
@@ -71,10 +71,10 @@ module Rubydeps
     def create_dependencies_dot_for(options)
       ARGV.clear
       Rubydeps.analyze(:path_filter => Regexp.new(options[:path_filter]),
-                              :class_name_filter => Regexp.new(options[:class_name_filter]),
-                              :to_file => options[:to_file],
-                              :from_file => options[:from_file]) do
-        yield
+                       :class_name_filter => Regexp.new(options[:class_name_filter]),
+                       :to_file => options[:to_file],
+                       :from_file => options[:from_file]) do
+        yield if block_given?
       end
     end
   end
