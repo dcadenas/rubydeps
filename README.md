@@ -32,7 +32,7 @@ Rubydeps will run your test suite to record the call graph of your project and u
 
         Rubydeps.start
 
-   Notice that this will slow down your tests so consider adding a conditional bound to some ENV variable or just remove the line when you are done.
+    Notice that this will slow down your tests so consider adding a conditional bound to some ENV variable or just remove the line when you are done.
 
 3. Run your tests, a file named rubydeps.dump will be created in the project root.
 
@@ -48,7 +48,7 @@ Rubydeps will run your test suite to record the call graph of your project and u
     dot -Tsvg rubydeps.dot > rubydeps.svg
     ```
 
-   Notice that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so you can use it as a quick bird's eye view of your project test coverage.
+    Keep in mind that sometimes you may have missing dependencies as we graph the dependencies exercised by your tests so you can use it as a quick bird's eye view of your project test coverage.
 
 ### Command line options
 
