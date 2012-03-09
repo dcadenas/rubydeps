@@ -1,44 +1,61 @@
 require 'graphviz'
-require 'set'
 require 'call_site_analyzer'
 
 module Rubydeps
+  def self.start(install_at_exit = true)
+    CallSiteAnalyzer.start
+    at_exit { self.do_at_exit } if install_at_exit
+  end
+
   def self.analyze(options = {}, &block_to_analyze)
     dependency_hash, class_location_hash = dependency_hash_for(options, &block_to_analyze)
+    create_output_file(dependency_hash, class_location_hash, options)
+  end
 
+  def self.dependency_hash_for(options = {}, &block_to_analyze)
+    dependency_hash, class_location_hash = calculate_or_load_dependencies(options, &block_to_analyze)
+
+    apply_filters(dependency_hash, class_location_hash, options)
+
+    [normalize_class_names(dependency_hash), class_location_hash]
+  end
+
+  def self.create_output_file(dependency_hash, class_location_hash, options)
     if options[:to_file]
       File.open(options[:to_file], 'wb') do |f|
         f.write Marshal.dump([dependency_hash, class_location_hash])
       end
     else
-      if dependency_hash
-        g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
-        dependency_hash.each do |k,vs|
-          if !k.empty? && !vs.empty?
-            n1 = g.add_nodes(k.to_s)
-            if vs.respond_to?(:each)
-              vs.each do |v|
-                unless v.empty?
-                  n2 = g.add_nodes(v.to_s)
-                  g.add_edges(n2, n1)
-                end
-              end
-            end
-          end
-        end
+      create_dot_file(dependency_hash)
+    end
+  end
 
-        g.output( :dot => "rubydeps.dot" )
+  def self.do_at_exit
+    # Store the exit status of the test run since it goes away after calling the at_exit proc...
+    exit_status = if $!
+      $!.is_a?(SystemExit) ? $!.status : 1
+    end
+
+    dependency_hash, class_location_hash = CallSiteAnalyzer.result
+    create_output_file(dependency_hash, class_location_hash, :to_file => Rubydeps.default_dump_name, :class_name_filter => /.*/, :path_filter => /.*/)
+
+    exit exit_status if exit_status
+  end
+
+  def self.calculate_or_load_dependencies(options, &block_to_analyze)
+    if options[:from_file]
+      Marshal.load(File.binread(options[:from_file]))
+    else
+      begin
+        self.start(false)
+        block_to_analyze.call()
+      ensure
+       return CallSiteAnalyzer.result
       end
     end
   end
 
-  def self.dependency_hash_for(options = {}, &block_to_analyze)
-    dependency_hash, class_location_hash = if options[:from_file]
-                                             Marshal.load(File.binread(options[:from_file]))
-                                           else
-                                             CallSiteAnalyzer.analyze(&block_to_analyze)
-                                           end
-
+  def self.apply_filters(dependency_hash, class_location_hash, options)
     path_filter = options.fetch(:path_filter, /.*/)
     class_name_filter = options.fetch(:class_name_filter, /.*/)
     classes_to_remove = get_classes_to_remove(dependency_hash, class_location_hash, path_filter, class_name_filter)
@@ -50,13 +67,6 @@ module Rubydeps
         dependency_hash[called_class].member? klass_to_remove
       end
 
-      #transitive dependencies, hmmm, not sure is a good idea
-      #if classes_calling_class_to_remove && !classes_calling_class_to_remove.empty?
-      #  classes_called_by_class_to_remove.each do |called_class|
-      #    dependency_hash[called_class] |= classes_calling_class_to_remove
-      #  end
-      #end
-
       dependency_hash.delete(klass_to_remove)
       classes_called_by_class_to_remove.each do |called_class|
         if dependency_hash[called_class]
@@ -67,10 +77,34 @@ module Rubydeps
           end
         end
       end
+    end
+  end
 
+  def self.normalize_class_name(klass)
+    good_class_name = klass.gsub(/#<(.+):(.+)>/, 'Instance of \1')
+    good_class_name.gsub!(/\([^\)]*\)/, "")
+    good_class_name.gsub(/0x[\da-fA-F]+/, '(hex number)')
+  end
+
+  def self.create_dot_file(dependency_hash)
+    return unless dependency_hash
+
+    g = GraphViz::new( "G", :use => 'dot', :mode => 'major', :rankdir => 'LR', :concentrate => 'true', :fontname => 'Arial')
+    dependency_hash.each do |k,vs|
+      if !k.empty? && !vs.empty?
+        n1 = g.add_nodes(k.to_s)
+        if vs.respond_to?(:each)
+          vs.each do |v|
+            unless v.empty?
+              n2 = g.add_nodes(v.to_s)
+              g.add_edges(n2, n1)
+            end
+          end
+        end
+      end
     end
 
-    [normalize_class_names(dependency_hash), class_location_hash]
+    g.output( :dot => "rubydeps.dot" )
   end
 
   def self.get_classes_to_remove(dependency_hash, class_location_hash, path_filter, class_name_filter)
@@ -84,9 +118,7 @@ module Rubydeps
     Hash[dependency_hash.map { |k,v| [normalize_class_name(k), v.map{|c| c == k ? nil : normalize_class_name(c)}.compact] }]
   end
 
-  def self.normalize_class_name(klass)
-    good_class_name = klass.gsub(/#<(.+):(.+)>/, 'Instance of \1')
-    good_class_name.gsub!(/\([^\)]*\)/, "")
-    good_class_name.gsub(/0x[\da-fA-F]+/, '(hex number)')
+  def self.default_dump_name
+    "rubydeps.dump"
   end
 end

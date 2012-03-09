@@ -116,25 +116,24 @@ static int uniq_calling_arrays(VALUE called_class, VALUE calling_class_array, VA
   return ST_CONTINUE;
 }
 
-static VALUE analyze(VALUE self){
-  if(rb_block_given_p()) {
-    dependency_array = rb_ary_new();
-    rb_global_variable(&dependency_array);
+static VALUE start(VALUE self){
+  dependency_array = rb_ary_new();
+  rb_global_variable(&dependency_array);
 
-    VALUE dependency_hash = rb_hash_new();
-    rb_ary_push(dependency_array, dependency_hash);
+  VALUE dependency_hash = rb_hash_new();
+  rb_ary_push(dependency_array, dependency_hash);
 
-    VALUE class_location_hash = rb_hash_new();
-    rb_ary_push(dependency_array, class_location_hash);
+  VALUE class_location_hash = rb_hash_new();
+  rb_ary_push(dependency_array, class_location_hash);
 
-    rb_add_event_hook(event_hook, RUBY_EVENT_CALL, Qnil);
-    rb_yield(Qnil);
-    rb_remove_event_hook(event_hook);
+  rb_add_event_hook(event_hook, RUBY_EVENT_CALL, Qnil);
 
-    rb_hash_foreach(rb_ary_entry(dependency_array, 0), uniq_calling_arrays, 0);
-  } else {
-    rb_raise(rb_eArgError, "a block is required");
-  }
+  return Qnil;
+}
+
+static VALUE result(VALUE self){
+  rb_remove_event_hook(event_hook);
+  rb_hash_foreach(rb_ary_entry(dependency_array, 0), uniq_calling_arrays, 0);
 
   return dependency_array;
 }
@@ -143,5 +142,6 @@ static VALUE rb_cCallSiteAnalyzer;
 
 void Init_call_site_analyzer(){
   rb_cCallSiteAnalyzer = rb_define_module("CallSiteAnalyzer");
-  rb_define_singleton_method(rb_cCallSiteAnalyzer, "analyze", analyze, 0);
+  rb_define_singleton_method(rb_cCallSiteAnalyzer, "start", start, 0);
+  rb_define_singleton_method(rb_cCallSiteAnalyzer, "result", result, 0);
 }

@@ -4,78 +4,16 @@ require 'thor'
 
 module Rubydeps
   class Runner < Thor
-    desc "testunit", "Create the dependency graph after runnning the testunit tests"
-    method_option :to_file, :type => :string
+    desc "", "Loads dependencies saved by a previous test run"
+    method_option :from_file, :type => :string, :default => Rubydeps.default_dump_file_name, :required => true
     method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
     method_option :class_name_filter, :type => :string, :default => '', :required => true
-    def testunit
-      require 'minitest/unit'
-      require 'test/unit/assertions'
-      require 'test/unit/testcase'
-
-      $LOAD_PATH.unshift("#{`pwd`.chomp}/lib")
-
-      #dirty hack so that minitest doesn't install the at_exit hook and we can run the tests in this same process
-      ::MiniTest::Unit.class_variable_set("@@installed_at_exit", true)
-
-      (Dir["./test/**/*_test.rb"] + Dir["./test/**/test_*.rb"]).each { |f| load f unless f =~ /^-/  }
-
-      create_dependencies_dot_for(options) do
-        ::MiniTest::Unit.new.run([])
-      end
-    end
-
-    desc "rspec", "Create the dependency graph after runnning the rspec tests"
-    method_option :to_file, :type => :string
-    #TODO: this breaks when using underscores, investigate
-    method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
-    method_option :class_name_filter, :type => :string, :default => '', :required => true
-    def rspec
-      require 'spec'
-
-      p = ::Spec::Runner::OptionParser.new($stderr, $stdout)
-      p.parse(Dir["./spec/**/*_spec.rb"])
-      op = p.options
-
-      create_dependencies_dot_for(options) do
-        ::Spec::Runner::CommandLine.run(op)
-      end
-    end
-
-    desc "", "Loads dependencies saved by a --to_file option in a previous run. Doesn't run tests"
-    method_option :from_file, :type => :string, :required => true
-    method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
-    method_option :class_name_filter, :type => :string, :default => '', :required => true
-    default_task :load_deps
-    def load_deps
-      create_dependencies_dot_for(options)
-    end
-
-    desc "rspec2", "Create the dependency graph after runnning the rspec 2 tests"
-    method_option :to_file, :type => :string
-    method_option :path_filter, :type => :string, :default => `pwd`.chomp, :required => true
-    method_option :class_name_filter, :type => :string, :default => '', :required => true
-    def rspec2
-      require 'rspec'
-
-      op = ::RSpec::Core::ConfigurationOptions.new(Dir["./spec/**/*_spec.rb"])
-      op.parse_options
-
-      create_dependencies_dot_for(options) do
-        ::RSpec::Core::CommandLine.new(op).run($stderr, $stdout)
-      end
-    end
-
-  private
-
-    def create_dependencies_dot_for(options)
+    default_task :create_dot
+    def create_dot
       ARGV.clear
       Rubydeps.analyze(:path_filter => Regexp.new(options[:path_filter]),
                        :class_name_filter => Regexp.new(options[:class_name_filter]),
-                       :to_file => options[:to_file],
-                       :from_file => options[:from_file]) do
-        yield if block_given?
-      end
+                       :from_file => options[:from_file])
     end
   end
 end
