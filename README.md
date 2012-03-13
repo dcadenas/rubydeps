@@ -34,15 +34,15 @@ Rubydeps will run your test suite to record the call graph of your project and u
 
     Notice that this will slow down your tests so consider adding a conditional bound to some ENV variable or just remove the line when you are done.
 
-3. Run your tests, a file named rubydeps.dump will be created in the project root.
+3. Run your tests, a file named `rubydeps.dump` will be created in the project root.
 
-4. The next step is reading the dump file to generate the graphviz dot graph `rubydeps.dot` with any filter you specify.
+4. The next step is reading the dump file to generate the [Graphviz](http://www.graphviz.org) dot graph `rubydeps.dot` with any filter you specify.
 
     ```bash
     rubydeps --path_filter='app/models'
     ```
 
-5. Now you are in [Graphviz](http://www.graphviz.org) realm. You can convert the dot file to any image format with your prefered orientations and layouts with the dot utility that comes with the graphviz installation e.g.:
+5. Now you are in [Graphviz](http://www.graphviz.org) realm. You can convert the dot file to any image format with your prefered orientations and layouts with the dot utility that comes with the [Graphviz](http://www.graphviz.org) installation e.g.:
 
     ```bash
     dot -Tsvg rubydeps.dot > rubydeps.svg
@@ -97,8 +97,8 @@ Dependencies
 ------------
 
 * graphviz
-* ruby-graphviz
-* rcov (only for version 0.2.0)
+* ruby-graphviz gem
+* rcov gem (only for version 0.2.0)
 
 Note on Patches/Pull Requests
 -----------------------------
