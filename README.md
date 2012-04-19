@@ -1,4 +1,7 @@
 [![Build Status](https://secure.travis-ci.org/dcadenas/rubydeps.png?branch=master)](http://travis-ci.org/dcadenas/rubydeps)
+
+[![endorse](http://api.coderwall.com/dcadenas/endorsecount.png)](http://coderwall.com/dcadenas)
+
 rubydeps
 ========
 
