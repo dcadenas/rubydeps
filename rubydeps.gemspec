@@ -34,24 +34,24 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_development_dependency(%q<rake-compiler>, ["~> 0.8.0"])
-      s.add_development_dependency(%q<rspec>, ["~> 2.8.0"])
-      s.add_development_dependency(%q<file_test_helper>, ["~> 1.0.0"])
-      s.add_dependency(%q<ruby-graphviz>, ["~> 1.0.5"])
-      s.add_dependency(%q<thor>, ["~> 0.14.2"])
+      s.add_development_dependency(%q<rake-compiler>, ["~> 0.8"])
+      s.add_development_dependency(%q<rspec>, ["~> 2.8"])
+      s.add_development_dependency(%q<file_test_helper>, ["~> 1.0"])
+      s.add_dependency(%q<ruby-graphviz>, ["~> 1.0"])
+      s.add_dependency(%q<thor>, ["~> 0.14"])
     else
-      s.add_dependency(%q<rake-compiler>, ["~> 0.8.0"])
-      s.add_dependency(%q<rspec>, [">= 2.8.0"])
-      s.add_dependency(%q<file_test_helper>, ["~> 1.0.0"])
-      s.add_dependency(%q<ruby-graphviz>, ["~> 1.0.5"])
-      s.add_dependency(%q<thor>, ["~> 0.14.2"])
+      s.add_dependency(%q<rake-compiler>, ["~> 0.8"])
+      s.add_dependency(%q<rspec>, [">= 2.8"])
+      s.add_dependency(%q<file_test_helper>, ["~> 1.0"])
+      s.add_dependency(%q<ruby-graphviz>, ["~> 1.0"])
+      s.add_dependency(%q<thor>, ["~> 0.14"])
     end
   else
-    s.add_dependency(%q<rake-compiler>, ["~> 0.8.0"])
-    s.add_dependency(%q<rspec>, [">= 2.8.0"])
-    s.add_dependency(%q<file_test_helper>, ["~> 1.0.0"])
-    s.add_dependency(%q<ruby-graphviz>, ["~> 1.0.5"])
-    s.add_dependency(%q<thor>, ["~> 0.14.2"])
+    s.add_dependency(%q<rake-compiler>, ["~> 0.8"])
+    s.add_dependency(%q<rspec>, [">= 2.8"])
+    s.add_dependency(%q<file_test_helper>, ["~> 1.0"])
+    s.add_dependency(%q<ruby-graphviz>, ["~> 1.0"])
+    s.add_dependency(%q<thor>, ["~> 0.14"])
   end
 end
 
