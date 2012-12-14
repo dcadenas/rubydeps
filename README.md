@@ -9,7 +9,6 @@ A tool to create class dependency graphs from test suites.
 
 I think this is more useful than static analysis of the code base because of the high dynamic aspects of the language. 
 
-
 Sample output
 -------------
 
