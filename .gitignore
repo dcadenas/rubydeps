@@ -23,3 +23,5 @@ tmp
 ## PROJECT::SPECIFIC
 rubydeps.dump
 lib/*.bundle
+
+Gemfile.lock
