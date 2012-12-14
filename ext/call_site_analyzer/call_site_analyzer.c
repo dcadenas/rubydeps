@@ -90,6 +90,7 @@ event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
   rb_control_frame_t* cfp = GET_THREAD()->cfp;
   VALUE class_of_called_object = class_of_obj_or_class(self);
   VALUE called_class = get_real_class(cfp->iseq->klass);
+  VALUE called_class_file_path = cfp->iseq->filepath;
 
   rb_control_frame_t* previous_cfp = callsite_cfp(cfp);
   if(previous_cfp != NULL){
@@ -97,17 +98,17 @@ event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
 
     if(class_of_called_object != calling_class){
       if(class_of_called_object != called_class){
-        //we can't assume that the location of class_of_called_object is the same as called_class, so guess == true
-        add_dependency(calling_class, class_of_called_object, cfp->iseq->filepath, Qtrue);
+        //we can't assume that the location of class_of_called_object is the same as the called_class file path, so guess == true
+        add_dependency(calling_class, class_of_called_object, called_class_file_path, Qtrue);
       } else {
-        add_dependency(calling_class, called_class, cfp->iseq->filepath, Qfalse);
+        add_dependency(calling_class, called_class, called_class_file_path, Qfalse);
       }
     }
   }
 
   //this dependency represents inheritance/inclusion/extension
   if(class_of_called_object != called_class){
-    add_dependency(class_of_called_object, called_class, cfp->iseq->filepath, Qfalse);
+    add_dependency(class_of_called_object, called_class, called_class_file_path, Qfalse);
   }
 }
 
