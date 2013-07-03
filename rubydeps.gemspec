@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = %q{rubydeps}
-  s.version = "0.9.5"
+  s.version = "0.9.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Daniel Cadenas"]
@@ -35,23 +35,26 @@ Gem::Specification.new do |s|
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
       s.add_development_dependency(%q<rake-compiler>, ["~> 0.8"])
-      s.add_development_dependency(%q<rspec>, ["~> 2.8"])
+      s.add_development_dependency(%q<rspec>, ["~> 2.13"])
       s.add_development_dependency(%q<file_test_helper>, ["~> 1.0"])
       s.add_dependency(%q<ruby-graphviz>, ["~> 1.0"])
-      s.add_dependency(%q<thor>, ["~> 0.14"])
+      s.add_dependency(%q<thor>, ["~> 0.18"])
+      s.add_dependency(%q<debugger-ruby_core_source>, ["~> 1.2"])
     else
       s.add_dependency(%q<rake-compiler>, ["~> 0.8"])
-      s.add_dependency(%q<rspec>, [">= 2.8"])
+      s.add_dependency(%q<rspec>, [">= 2.13"])
       s.add_dependency(%q<file_test_helper>, ["~> 1.0"])
       s.add_dependency(%q<ruby-graphviz>, ["~> 1.0"])
-      s.add_dependency(%q<thor>, ["~> 0.14"])
+      s.add_dependency(%q<thor>, ["~> 0.18"])
+      s.add_dependency(%q<debugger-ruby_core_source>, ["~> 1.2"])
     end
   else
     s.add_dependency(%q<rake-compiler>, ["~> 0.8"])
-    s.add_dependency(%q<rspec>, [">= 2.8"])
+    s.add_dependency(%q<rspec>, [">= 2.13"])
     s.add_dependency(%q<file_test_helper>, ["~> 1.0"])
     s.add_dependency(%q<ruby-graphviz>, ["~> 1.0"])
-    s.add_dependency(%q<thor>, ["~> 0.14"])
+    s.add_dependency(%q<thor>, ["~> 0.18"])
+    s.add_dependency(%q<debugger-ruby_core_source>, ["~> 1.2"])
   end
 end
 

@@ -2,9 +2,16 @@
 #include <vm_core.h>
 #include <iseq.h>
 
-// Fix compile error in ruby 1.9.3
-#ifdef RTYPEDDATA_DATA
-#define ruby_current_thread ((rb_thread_t *)RTYPEDDATA_DATA(rb_thread_current()))
+#if GET_THREAD
+  #define ruby_current_thread ((rb_thread_t *)RTYPEDDATA_DATA(rb_thread_current()))
+  #define GET_THREAD2 GET_THREAD
+#else
+  rb_thread_t *ruby_current_thread;
+  rb_thread_t *GET_THREAD2(void)
+  {
+    ruby_current_thread = ((rb_thread_t *)RTYPEDDATA_DATA(rb_thread_current()));
+    return GET_THREAD();
+  }
 #endif
 
 inline static rb_control_frame_t*
@@ -87,10 +94,22 @@ add_dependency(VALUE calling_class, VALUE called_class, VALUE called_class_file_
 //NOTE: this function should be as optimized as possible as it's being called on each ruby method call
 static void
 event_hook(rb_event_flag_t event, VALUE data, VALUE self, ID mid, VALUE klass){
-  rb_control_frame_t* cfp = GET_THREAD()->cfp;
+  rb_control_frame_t* cfp = GET_THREAD2()->cfp;
   VALUE class_of_called_object = class_of_obj_or_class(self);
   VALUE called_class = get_real_class(cfp->iseq->klass);
-  VALUE called_class_file_path = cfp->iseq->filepath;
+  VALUE called_class_file_path;
+
+  #ifdef HAVE_TYPE_RB_ISEQ_LOCATION_T
+    if (RTEST(cfp->iseq->location.absolute_path))
+        called_class_file_path = cfp->iseq->location.absolute_path;
+    else
+        called_class_file_path = cfp->iseq->location.path;
+  #else
+    if (RTEST(cfp->iseq->filepath))
+        called_class_file_path = cfp->iseq->filepath;
+    else
+        called_class_file_path = cfp->iseq->filename;
+  #endif
 
   rb_control_frame_t* previous_cfp = callsite_cfp(cfp);
   if(previous_cfp != NULL){
