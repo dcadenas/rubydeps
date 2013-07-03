@@ -118,4 +118,4 @@ Copyright
 
 Copyright (c) 2012 Daniel Cadenas. See LICENSE for details.
 
-Development sponsored by [Cubox](http://www.cuboxlabs.com)
+Development sponsored by [Neo](http://neo.com)
