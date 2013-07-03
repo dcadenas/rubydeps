@@ -87,7 +87,7 @@ Installation
 gem install rubydeps
 ```
 
-Rubydeps now only supports ruby 1.9.x. If you need 1.8.x support then:
+Rubydeps now only supports ruby >= 1.9.2. If you need 1.8.x support then:
 
 ```bash
 gem install rubydeps -v0.2.0
